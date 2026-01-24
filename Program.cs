@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using TimeTracker.Api.Data;
 using OpenIddict.Validation.AspNetCore;
+using TimeTracker.Api.Domain.Identity;
+using System.Data;
+using TimeTracker.Api.Auth;
 
 
 Console.WriteLine("=== PROGRAM.CS LOADED ===");
@@ -21,9 +24,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseOpenIddict();
 });
 
-// Identity (késõbb kell user loginhoz)
 builder.Services
-    .AddIdentity<IdentityUser, IdentityRole>(options =>
+    .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.User.RequireUniqueEmail = true;
         options.Password.RequiredLength = 8;
@@ -67,7 +69,14 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
 });
-builder.Services.AddAuthorization();
+
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(Policies.EmployeeOnly, p => p.RequireRole(Roles.Employee));
+    options.AddPolicy(Policies.HrOnly, p => p.RequireRole(Roles.HR));
+    options.AddPolicy(Policies.AdminOnly, p => p.RequireRole(Roles.Admin));
+});
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -105,5 +114,6 @@ app.MapGet("/secure", (System.Security.Claims.ClaimsPrincipal user) =>
 }).RequireAuthorization();
 
 await OpenIddictSeeder.SeedAsync(app.Services);
+await IdentitySeeder.SeedAsync(app.Services);
 
 app.Run();
