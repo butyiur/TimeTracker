@@ -3,12 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TimeTracker.Api.Data;
 using TimeTracker.Api.Domain.Entities;
+using TimeTracker.Api.Auth;
+
 
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
+[Authorize(Policy = Policies.HrOnly)]
 public class ProjectsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
