@@ -13,23 +13,6 @@ public static class OpenIddictSeeder
         var appManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
         var scopeManager = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
 
-        // ===== CLIENT =====
-        if (await appManager.FindByClientIdAsync("timetracker-dev") is null)
-        {
-            await appManager.CreateAsync(new OpenIddictApplicationDescriptor
-            {
-                ClientId = "timetracker-dev",
-                ClientSecret = "dev-secret-123",
-                DisplayName = "TimeTracker Dev Client",
-                Permissions =
-                {
-                    Permissions.Endpoints.Token,
-                    Permissions.GrantTypes.ClientCredentials,
-                    Permissions.Prefixes.Scope + "api"
-                }
-            });
-        }
-
         // ===== SCOPE =====
         if (await scopeManager.FindByNameAsync("api") is null)
         {
@@ -39,5 +22,40 @@ public static class OpenIddictSeeder
                 DisplayName = "TimeTracker API access"
             });
         }
+
+        // ===== CLIENTS (RBAC TEST) =====
+        await EnsureClient(appManager,
+            clientId: "timetracker-employee-client",
+            clientSecret: "employee-secret");
+
+        await EnsureClient(appManager,
+            clientId: "timetracker-hr-client",
+            clientSecret: "hr-secret");
+
+        await EnsureClient(appManager,
+            clientId: "timetracker-admin-client",
+            clientSecret: "admin-secret");
+    }
+
+    private static async Task EnsureClient(
+        IOpenIddictApplicationManager appManager,
+        string clientId,
+        string clientSecret)
+    {
+        if (await appManager.FindByClientIdAsync(clientId) is not null)
+            return;
+
+        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = clientId,
+            ClientSecret = clientSecret,
+            DisplayName = clientId,
+            Permissions =
+            {
+                Permissions.Endpoints.Token,
+                Permissions.GrantTypes.ClientCredentials,
+                Permissions.Prefixes.Scope + "api"
+            }
+        });
     }
 }

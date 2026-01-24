@@ -7,6 +7,7 @@ using OpenIddict.Validation.AspNetCore;
 using TimeTracker.Api.Domain.Identity;
 using System.Data;
 using TimeTracker.Api.Auth;
+using System.Security.Claims;
 
 
 Console.WriteLine("=== PROGRAM.CS LOADED ===");
@@ -107,6 +108,17 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+
+// DEBUG
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/debug/claims", (System.Security.Claims.ClaimsPrincipal user) =>
+    {
+        var claims = user.Claims.Select(c => new { c.Type, c.Value }).ToList();
+        return Results.Ok(claims);
+    }).RequireAuthorization();
+}
 
 app.MapGet("/secure", (System.Security.Claims.ClaimsPrincipal user) =>
 {
