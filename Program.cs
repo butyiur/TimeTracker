@@ -74,9 +74,14 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(Policies.EmployeeOnly, p => p.RequireRole(Roles.Employee));
-    options.AddPolicy(Policies.HrOnly, p => p.RequireRole(Roles.HR));
-    options.AddPolicy(Policies.AdminOnly, p => p.RequireRole(Roles.Admin));
+    options.AddPolicy(Policies.EmployeeOnly, p =>
+        p.RequireAuthenticatedUser().RequireRole(Roles.Employee));
+
+    options.AddPolicy(Policies.HrOnly, p =>
+        p.RequireAuthenticatedUser().RequireRole(Roles.HR));
+
+    options.AddPolicy(Policies.AdminOnly, p =>
+        p.RequireAuthenticatedUser().RequireRole(Roles.Admin));
 });
 
 builder.Services.ConfigureApplicationCookie(options =>

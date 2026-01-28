@@ -28,17 +28,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        builder.Entity<TimeEntry>(b =>
-        {
-            b.HasOne(t => t.User)
-             .WithMany()
-             .HasForeignKey(t => t.UserId)
-             .OnDelete(DeleteBehavior.Restrict);
-
-            b.HasOne(t => t.Project)
-             .WithMany()
-             .HasForeignKey(t => t.ProjectId)
-             .OnDelete(DeleteBehavior.Cascade);
-        });
+        builder.Entity<TimeEntry>()
+    .HasOne(x => x.OwnerUser)
+    .WithMany()
+    .HasForeignKey(x => x.OwnerUserId)
+    .OnDelete(DeleteBehavior.Restrict);
     }
 }
