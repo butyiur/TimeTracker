@@ -4,5 +4,5 @@ namespace TimeTracker.Api.Domain.Identity;
 
 public class ApplicationUser : IdentityUser
 {
-    // késõbb: FullName, Department, IsActive, stb.
+    // késõbb: FullName, Department, stb.
 }

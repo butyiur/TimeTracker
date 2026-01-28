@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <Folder Include="Data\" />
+    <Folder Include="Domain\Identity\" />
+    <Folder Include="Auth\" />
   </ItemGroup>
 
 </Project>
