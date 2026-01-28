@@ -48,6 +48,9 @@ public static class IdentitySeeder
             if (!create.Succeeded)
                 throw new InvalidOperationException($"Failed to create {email}: " +
                     string.Join("; ", create.Errors.Select(e => e.Description)));
+
+            Console.WriteLine($"Seeded user: {email} | role: {role} | id: {user.Id}");
+
         }
 
         if (!await userManager.IsInRoleAsync(user, role))
@@ -57,5 +60,10 @@ public static class IdentitySeeder
                 throw new InvalidOperationException($"Failed to add role {role} to {email}: " +
                     string.Join("; ", addRole.Errors.Select(e => e.Description)));
         }
+
+
+        
+
     }
+
 }
