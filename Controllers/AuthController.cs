@@ -1,23 +1,47 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
-using TimeTracker.Api.Auth;
 using TimeTracker.Api.Domain.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
-using Microsoft.AspNetCore;
-using OpenIddict.Abstractions;
+
 
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
-public class AuthController : ControllerBase
+public class AuthorizationController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
 
-    public AuthController(UserManager<ApplicationUser> userManager)
+    public AuthorizationController(UserManager<ApplicationUser> userManager)
+        => _userManager = userManager;
+
+    [HttpGet("~/connect/authorize")]
+    public async Task<IActionResult> Authorize()
     {
-        _userManager = userManager;
+        var request = HttpContext.GetOpenIddictServerRequest() ?? throw new InvalidOperationException("OpenIddict request is missing.");
+
+        // ha nincs cookie login -> irány a login, majd vissza ide
+        if (User?.Identity?.IsAuthenticated != true)
+        {
+            return Challenge(new AuthenticationProperties
+            {
+                RedirectUri = Request.PathBase + Request.Path + Request.QueryString.Value
+            }, IdentityConstants.ApplicationScheme);
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null) return Forbid();
+
+        var principal = await _userManager.CreatePrincipalAsync(user);
+
+        principal.SetScopes(request.GetScopes());
+        principal.SetResources("api");
+
+        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
     [HttpPost("~/connect/token")]
@@ -26,55 +50,40 @@ public class AuthController : ControllerBase
         var request = HttpContext.GetOpenIddictServerRequest()
             ?? throw new InvalidOperationException("OpenIddict request is missing.");
 
-        if (!request.IsClientCredentialsGrantType())
+        if (!request.IsAuthorizationCodeGrantType() && !request.IsRefreshTokenGrantType())
             return BadRequest(new { error = "unsupported_grant_type" });
 
-        // client -> role + dev email mapping
-        (string role, string email)? map = request.ClientId switch
-        {
-            "timetracker-employee-client" => (Roles.Employee, "employee@local"),
-            "timetracker-hr-client" => (Roles.HR, "hr@local"),
-            "timetracker-admin-client" => (Roles.Admin, "admin@local"),
-            _ => null
-        };
+        var result = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        if (result.Principal is null) return Forbid();
 
-        if (map is null)
-            return Forbid();
+        return SignIn(result.Principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+}
 
-        var (role, email) = map.Value;
-
-        // This is the key: find the dev user and embed its id into token
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user is null)
-            return Problem($"Dev user not found for {email}. Run IdentitySeeder first.", statusCode: 500);
-
+static class UserManagerExtensions
+{
+    public static async Task<ClaimsPrincipal> CreatePrincipalAsync(
+        this UserManager<ApplicationUser> userManager,
+        ApplicationUser user)
+    {
         var identity = new ClaimsIdentity(
             authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
             nameType: Claims.Name,
             roleType: Claims.Role);
 
-        // These describe the CLIENT (fine)
-        identity.AddClaim(new Claim(Claims.Subject, request.ClientId!)
+        identity.AddClaim(new Claim(Claims.Subject, user.Id)
             .SetDestinations(Destinations.AccessToken));
 
-        identity.AddClaim(new Claim(Claims.Name, request.ClientId!)
+        identity.AddClaim(new Claim(Claims.Name, user.Email ?? user.UserName ?? user.Id)
             .SetDestinations(Destinations.AccessToken));
 
-        // Role for policies
-        identity.AddClaim(new Claim(Claims.Role, role)
-            .SetDestinations(Destinations.AccessToken));
+        var roles = await userManager.GetRolesAsync(user);
+        foreach (var role in roles)
+        {
+            identity.AddClaim(new Claim(Claims.Role, role)
+                .SetDestinations(Destinations.AccessToken));
+        }
 
-        // This describes the USER we impersonate in dev (THIS is what your APIs need)
-        identity.AddClaim(new Claim("user_id", user.Id)
-            .SetDestinations(Destinations.AccessToken));
-
-        // Optional: standard NameIdentifier too (many libs expect this)
-        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id)
-            .SetDestinations(Destinations.AccessToken));
-
-        var principal = new ClaimsPrincipal(identity);
-        principal.SetScopes(new[] { "api" });
-
-        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        return new ClaimsPrincipal(identity);
     }
 }

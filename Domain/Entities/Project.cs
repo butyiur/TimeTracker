@@ -9,4 +9,5 @@ public class Project
 
     public string OwnerUserId { get; set; } = null!;
     public ApplicationUser OwnerUser { get; set; } = null!;
+
 }

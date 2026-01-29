@@ -23,21 +23,54 @@ public static class OpenIddictSeeder
             });
         }
 
-        // ===== CLIENTS (RBAC TEST) =====
-        await EnsureClient(appManager,
-            clientId: "timetracker-employee-client",
-            clientSecret: "employee-secret");
-
-        await EnsureClient(appManager,
-            clientId: "timetracker-hr-client",
-            clientSecret: "hr-secret");
-
-        await EnsureClient(appManager,
-            clientId: "timetracker-admin-client",
-            clientSecret: "admin-secret");
+        // ===== SPA CLIENT (Angular) - Authorization Code + PKCE =====
+        await EnsureSpaClient(
+            appManager,
+            clientId: "timetracker-angular-spa",
+            redirectUri: "https://localhost:7037/swagger/oauth2-redirect.html",
+            postLogoutRedirectUri: "https://localhost:7037/swagger/oauth2-redirect.html"
+        );
     }
 
-    private static async Task EnsureClient(
+    private static async Task EnsureSpaClient(
+        IOpenIddictApplicationManager appManager,
+        string clientId,
+        string redirectUri,
+        string postLogoutRedirectUri)
+    {
+        if (await appManager.FindByClientIdAsync(clientId) is not null)
+            return;
+
+        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = clientId,
+            DisplayName = clientId,
+            ConsentType = ConsentTypes.Explicit,
+            RedirectUris = { new Uri(redirectUri) },
+            // PostLogoutRedirectUris = { new Uri(postLogoutRedirectUri) }, // opcionális, maradhat kikommentezve
+            Permissions =
+    {
+        Permissions.Endpoints.Authorization,
+        Permissions.Endpoints.Token,
+
+        Permissions.GrantTypes.AuthorizationCode,
+        Permissions.GrantTypes.RefreshToken,
+
+        Permissions.ResponseTypes.Code,
+
+        Permissions.Prefixes.Scope + "api",
+        Permissions.Scopes.Profile,
+        Permissions.Scopes.Email,
+        Permissions.Scopes.Roles
+    },
+            Requirements =
+    {
+        Requirements.Features.ProofKeyForCodeExchange
+    }
+        });
+    }
+
+    private static async Task EnsureClientCredentialsClient(
         IOpenIddictApplicationManager appManager,
         string clientId,
         string clientSecret)
