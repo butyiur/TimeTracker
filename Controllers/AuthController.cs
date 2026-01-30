@@ -25,7 +25,10 @@ public class AuthorizationController : ControllerBase
         var request = HttpContext.GetOpenIddictServerRequest() ?? throw new InvalidOperationException("OpenIddict request is missing.");
 
         // ha nincs cookie login -> irány a login, majd vissza ide
-        if (User?.Identity?.IsAuthenticated != true)
+        //  Identity cookie principal explicit lekérése
+        var cookieAuth = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+
+        if (!cookieAuth.Succeeded || cookieAuth.Principal is null)
         {
             return Challenge(new AuthenticationProperties
             {
@@ -33,7 +36,7 @@ public class AuthorizationController : ControllerBase
             }, IdentityConstants.ApplicationScheme);
         }
 
-        var user = await _userManager.GetUserAsync(User);
+        var user = await _userManager.GetUserAsync(cookieAuth.Principal);
         if (user is null) return Forbid();
 
         var principal = await _userManager.CreatePrincipalAsync(user);

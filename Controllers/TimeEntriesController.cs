@@ -9,7 +9,6 @@ namespace TimeTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/timeentries")]
-[Authorize(Policy = Policies.EmployeeOnly)]
 public class TimeEntriesController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
@@ -18,6 +17,7 @@ public class TimeEntriesController : ControllerBase
 
     // GET api/timeentries/mine
     [HttpGet("mine")]
+    [Authorize(Policy = Policies.EmployeeOnly)]
     public async Task<ActionResult<List<TimeEntryDto>>> GetMine()
     {
         var userId = User.GetUserIdOrThrow();
@@ -39,16 +39,19 @@ public class TimeEntriesController : ControllerBase
 
     // POST api/timeentries/start
     [HttpPost("start")]
+    [Authorize(Policy = Policies.EmployeeOnly)]
     public async Task<ActionResult<TimeEntryDto>> Start([FromBody] StartTimeEntryRequest req)
     {
         var userId = User.GetUserIdOrThrow();
 
+        // MVP: a dolgozó csak a saját "projektjére" indíthat idõt
+        // (késõbb átnevezzük OwnerUserId-t AssignedUserId-ra / EmployeeId-ra, ha kell)
         var projectOk = await _db.Projects
             .AsNoTracking()
             .AnyAsync(p => p.Id == req.ProjectId && p.OwnerUserId == userId);
 
         if (!projectOk)
-            return NotFound();
+            return NotFound("Project not found.");
 
         var hasRunning = await _db.TimeEntries
             .AnyAsync(x => x.OwnerUserId == userId && x.EndUtc == null);
@@ -64,13 +67,24 @@ public class TimeEntriesController : ControllerBase
         };
 
         _db.TimeEntries.Add(entry);
-        await _db.SaveChangesAsync();
+
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // ha DB-szinten is bevezetjük az egy-futó-entry szabályt (unique filtered index),
+            // akkor itt jöhet a "race condition" elleni védelem
+            return BadRequest("You already have a running time entry.");
+        }
 
         return Ok(new TimeEntryDto(entry.Id, entry.ProjectId, entry.StartUtc, entry.EndUtc));
     }
 
     // POST api/timeentries/{id}/stop
     [HttpPost("{id:int}/stop")]
+    [Authorize(Policy = Policies.EmployeeOnly)]
     public async Task<ActionResult<TimeEntryDto>> Stop(int id)
     {
         var userId = User.GetUserIdOrThrow();
@@ -79,7 +93,7 @@ public class TimeEntriesController : ControllerBase
             .FirstOrDefaultAsync(x => x.Id == id && x.OwnerUserId == userId);
 
         if (entry is null)
-            return NotFound();
+            return NotFound("Time entry not found.");
 
         if (entry.EndUtc != null)
             return BadRequest("Time entry already stopped.");
@@ -88,6 +102,56 @@ public class TimeEntriesController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new TimeEntryDto(entry.Id, entry.ProjectId, entry.StartUtc, entry.EndUtc));
+    }
+
+    // DELETE api/timeentries/{id}
+    [HttpDelete("{id:int}")]
+    [Authorize(Policy = Policies.EmployeeOnly)]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userId = User.GetUserIdOrThrow();
+
+        var entry = await _db.TimeEntries
+            .FirstOrDefaultAsync(x => x.Id == id && x.OwnerUserId == userId);
+
+        if (entry is null)
+            return NotFound("Time entry not found.");
+
+        _db.TimeEntries.Remove(entry);
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // HR: GET api/timeentries/user/{userId}?fromUtc=...&toUtc=...
+    [HttpGet("user/{userId}")]
+    [Authorize(Policy = Policies.HrOnly)]
+    public async Task<ActionResult<List<TimeEntryDto>>> GetForUser(
+        [FromRoute] string userId,
+        [FromQuery] DateTime? fromUtc,
+        [FromQuery] DateTime? toUtc)
+    {
+        var query = _db.TimeEntries
+            .AsNoTracking()
+            .Where(x => x.OwnerUserId == userId);
+
+        if (fromUtc.HasValue)
+            query = query.Where(x => x.StartUtc >= fromUtc.Value);
+
+        if (toUtc.HasValue)
+            query = query.Where(x => x.StartUtc <= toUtc.Value);
+
+        var list = await query
+            .OrderByDescending(x => x.StartUtc)
+            .Select(x => new TimeEntryDto(
+                x.Id,
+                x.ProjectId,
+                x.StartUtc,
+                x.EndUtc
+            ))
+            .ToListAsync();
+
+        return Ok(list);
     }
 }
 
