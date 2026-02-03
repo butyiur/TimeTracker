@@ -7,7 +7,8 @@ public class Project
     public int Id { get; set; }
     public string Name { get; set; } = null!;
 
-    public string OwnerUserId { get; set; } = null!;
-    public ApplicationUser OwnerUser { get; set; } = null!;
+    public string CreatedByUserId { get; set; } = null!;
+    public ApplicationUser CreatedByUser { get; set; } = null!;
 
+    public ICollection<ProjectAssignment> Assignments { get; set; } = new List<ProjectAssignment>();
 }

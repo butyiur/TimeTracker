@@ -44,14 +44,19 @@ public class TimeEntriesController : ControllerBase
     {
         var userId = User.GetUserIdOrThrow();
 
-        // MVP: a dolgozó csak a saját "projektjére" indíthat idõt
-        // (késõbb átnevezzük OwnerUserId-t AssignedUserId-ra / EmployeeId-ra, ha kell)
-        var projectOk = await _db.Projects
+        var projectExists = await _db.Projects
             .AsNoTracking()
-            .AnyAsync(p => p.Id == req.ProjectId && p.OwnerUserId == userId);
+            .AnyAsync(p => p.Id == req.ProjectId);
 
-        if (!projectOk)
+        if (!projectExists)
             return NotFound("Project not found.");
+
+        var assigned = await _db.ProjectAssignments
+            .AsNoTracking()
+            .AnyAsync(x => x.ProjectId == req.ProjectId && x.UserId == userId);
+
+        if (!assigned)
+            return Forbid();
 
         var hasRunning = await _db.TimeEntries
             .AnyAsync(x => x.OwnerUserId == userId && x.EndUtc == null);
