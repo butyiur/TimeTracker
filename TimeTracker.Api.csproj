@@ -24,9 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Contracts\Reports\" />
     <Folder Include="Data\" />
     <Folder Include="Domain\Identity\" />
     <Folder Include="Auth\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

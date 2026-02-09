@@ -8,7 +8,6 @@ using OpenIddict.Server.AspNetCore;
 using TimeTracker.Api.Domain.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
-
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
@@ -22,13 +21,13 @@ public class AuthorizationController : ControllerBase
     [HttpGet("~/connect/authorize")]
     public async Task<IActionResult> Authorize()
     {
-        var request = HttpContext.GetOpenIddictServerRequest() ?? throw new InvalidOperationException("OpenIddict request is missing.");
+        var request = HttpContext.GetOpenIddictServerRequest()
+            ?? throw new InvalidOperationException("OpenIddict request is missing.");
 
-        // ha nincs cookie login -> irány a login, majd vissza ide
-        //  Identity cookie principal explicit lekérése
+        // KIFEJEZETTEN a cookie sémával autentikálunk, nem a defaulttal
         var cookieAuth = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
 
-        if (!cookieAuth.Succeeded || cookieAuth.Principal is null)
+        if (!cookieAuth.Succeeded || cookieAuth.Principal?.Identity?.IsAuthenticated != true)
         {
             return Challenge(new AuthenticationProperties
             {
@@ -63,7 +62,7 @@ public class AuthorizationController : ControllerBase
     }
 }
 
-static class UserManagerExtensions
+internal static class UserManagerExtensions
 {
     public static async Task<ClaimsPrincipal> CreatePrincipalAsync(
         this UserManager<ApplicationUser> userManager,

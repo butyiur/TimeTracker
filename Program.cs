@@ -14,6 +14,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<TimeTracker.Api.Services.IAuditService, TimeTracker.Api.Services.AuditService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<TimeTracker.Api.Data.IAuditWriter, TimeTracker.Api.Data.AuditWriter>();
 
 // Razor Pages kell az Identity UI-hoz (login/logout/2FA később)
 builder.Services.AddRazorPages();
