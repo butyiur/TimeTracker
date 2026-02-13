@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using TimeTracker.Api.Domain.Entities;
+using TimeTracker.Api.Domain.TimeTracking;
 using TimeTracker.Api.Domain.Identity;
+using TimeTracker.Api.Domain.Entities;
 
 namespace TimeTracker.Api.Data;
 
@@ -13,7 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<TimeEntry> TimeEntries => Set<TimeEntry>();
     public DbSet<ProjectAssignment> ProjectAssignments => Set<ProjectAssignment>();
-
+    public DbSet<Approval> Approvals => Set<Approval>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
 
@@ -25,16 +26,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.UseOpenIddict();
 
         // Ownership mappings (maradhat, csak lent módosítjuk a user típust!)
+        // Project
         builder.Entity<Project>(b =>
         {
-            b.HasOne(p => p.CreatedByUser)
-             .WithMany()
-             .HasForeignKey(p => p.CreatedByUserId)
-             .OnDelete(DeleteBehavior.Restrict);
+            b.Property(x => x.Name).HasMaxLength(256).IsRequired();
+            b.HasIndex(x => x.Name).IsUnique(false);
 
-            b.HasIndex(p => p.Name).IsUnique(false);
+            b.HasOne(x => x.CreatedByUser)
+             .WithMany()
+             .HasForeignKey(x => x.CreatedByUserId)
+             .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // ProjectAssignment
         builder.Entity<ProjectAssignment>(b =>
         {
             b.HasKey(x => new { x.ProjectId, x.UserId });
@@ -47,11 +51,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.HasOne(x => x.User)
              .WithMany()
              .HasForeignKey(x => x.UserId)
-             .OnDelete(DeleteBehavior.Restrict);
-
-            b.HasIndex(x => x.UserId);
+             .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // TimeEntry
         builder.Entity<TimeEntry>(b =>
         {
             b.HasOne(x => x.OwnerUser)

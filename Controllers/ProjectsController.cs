@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TimeTracker.Api.Auth;
 using TimeTracker.Api.Contracts.Projects;
 using TimeTracker.Api.Data;
-using TimeTracker.Api.Domain.Entities;
+using TimeTracker.Api.Domain.TimeTracking;
 
 namespace TimeTracker.Api.Controllers;
 
@@ -16,12 +16,12 @@ public class ProjectsController : ControllerBase
     public ProjectsController(ApplicationDbContext db) => _db = db;
 
     [HttpGet]
-    [Authorize(Policy = Policies.HrOnly)]
+    [Authorize(Policy = Policies.HrOrAdmin)]
     public async Task<List<Project>> Get() =>
         await _db.Projects.AsNoTracking().OrderBy(x => x.Id).ToListAsync();
 
     [HttpGet("{id:int}")]
-    [Authorize(Policy = Policies.HrOnly)]
+    [Authorize(Policy = Policies.HrOrAdmin)]
     public async Task<ActionResult<Project>> GetById(int id)
     {
         var p = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
@@ -29,7 +29,7 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = Policies.HrOnly)]
+    [Authorize(Policy = Policies.HrOrAdmin)]
     public async Task<ActionResult<Project>> Create([FromBody] CreateProjectRequest input)
     {
         if (string.IsNullOrWhiteSpace(input.Name))
@@ -52,7 +52,7 @@ public class ProjectsController : ControllerBase
     public record AssignUserRequest(string UserId);
 
     [HttpPost("{id:int}/assign")]
-    [Authorize(Policy = Policies.HrOnly)]
+    [Authorize(Policy = Policies.HrOrAdmin)]
     public async Task<IActionResult> Assign(int id, [FromBody] AssignUserRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.UserId))
@@ -79,7 +79,7 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpPost("{id:int}/unassign")]
-    [Authorize(Policy = Policies.HrOnly)]
+    [Authorize(Policy = Policies.HrOrAdmin)]
     public async Task<IActionResult> Unassign(int id, [FromBody] AssignUserRequest req)
     {
         if (string.IsNullOrWhiteSpace(req.UserId))
@@ -94,7 +94,7 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet("{id:int}/assignees")]
-    [Authorize(Policy = Policies.HrOnly)]
+    [Authorize(Policy = Policies.HrOrAdmin)]
     public async Task<ActionResult<List<object>>> Assignees(int id)
     {
         var list = await _db.ProjectAssignments

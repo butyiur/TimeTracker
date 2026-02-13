@@ -3,6 +3,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using TimeTracker.Api.Domain.Identity;
@@ -18,13 +19,13 @@ public class AuthorizationController : ControllerBase
     public AuthorizationController(UserManager<ApplicationUser> userManager)
         => _userManager = userManager;
 
+    [EnableRateLimiting("auth")]
     [HttpGet("~/connect/authorize")]
     public async Task<IActionResult> Authorize()
     {
         var request = HttpContext.GetOpenIddictServerRequest()
             ?? throw new InvalidOperationException("OpenIddict request is missing.");
 
-        // KIFEJEZETTEN a cookie sémával autentikálunk, nem a defaulttal
         var cookieAuth = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
 
         if (!cookieAuth.Succeeded || cookieAuth.Principal?.Identity?.IsAuthenticated != true)
@@ -46,6 +47,7 @@ public class AuthorizationController : ControllerBase
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
+    [EnableRateLimiting("auth")]
     [HttpPost("~/connect/token")]
     public async Task<IActionResult> Exchange()
     {

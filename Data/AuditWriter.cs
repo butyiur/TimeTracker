@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using TimeTracker.Api.Auth;
+using TimeTracker.Api.Domain.TimeTracking;
 using TimeTracker.Api.Domain.Entities;
 
 namespace TimeTracker.Api.Data;

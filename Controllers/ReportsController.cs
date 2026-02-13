@@ -5,12 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using TimeTracker.Api.Auth;
 using TimeTracker.Api.Contracts.Reports;
 using TimeTracker.Api.Data;
-
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/reports")]
-[Authorize(Policy = Policies.HrOnly)]
+[Authorize(Policy = Policies.HrOrAdmin)]
 public class ReportsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;

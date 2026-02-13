@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TimeTracker.Api.Auth;
 using TimeTracker.Api.Data;
-using TimeTracker.Api.Domain.Entities;
+using TimeTracker.Api.Domain.TimeTracking;
 
 namespace TimeTracker.Api.Controllers;
 
