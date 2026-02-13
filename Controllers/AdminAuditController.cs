@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TimeTracker.Api.Auth;
 using TimeTracker.Api.Data;
+using TimeTracker.Api.Contracts.Audit;
 
 namespace TimeTracker.Api.Controllers;
 
@@ -16,39 +17,67 @@ public class AdminAuditController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> Get(
-        [FromQuery] DateTime? fromUtc,
-        [FromQuery] DateTime? toUtc,
-        [FromQuery] string? eventType,
-        [FromQuery] string? userId,
-        [FromQuery] int take = 100)
+    [FromQuery] DateTime? fromUtc,
+    [FromQuery] DateTime? toUtc,
+    [FromQuery] string? eventType,
+    [FromQuery] string? userId,
+    [FromQuery] string? result,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 50)
     {
-        if (take is < 1 or > 500) take = 100;
+        if (page < 1) page = 1;
+        if (pageSize is < 1 or > 200) pageSize = 50;
 
-        var q = _db.AuditLogs.AsNoTracking().AsQueryable();
+        var query = _db.AuditLogs.AsNoTracking().AsQueryable();
 
-        if (fromUtc.HasValue) q = q.Where(x => x.TimestampUtc >= fromUtc.Value);
-        if (toUtc.HasValue) q = q.Where(x => x.TimestampUtc <= toUtc.Value);
-        if (!string.IsNullOrWhiteSpace(eventType)) q = q.Where(x => x.EventType == eventType);
-        if (!string.IsNullOrWhiteSpace(userId)) q = q.Where(x => x.UserId == userId);
+        // Default: last 7 days if nothing specified
+        if (!fromUtc.HasValue && !toUtc.HasValue)
+        {
+            var defaultFrom = DateTime.UtcNow.AddDays(-7);
+            query = query.Where(x => x.TimestampUtc >= defaultFrom);
+        }
 
-        var list = await q
+        if (fromUtc.HasValue)
+            query = query.Where(x => x.TimestampUtc >= fromUtc.Value);
+
+        if (toUtc.HasValue)
+            query = query.Where(x => x.TimestampUtc <= toUtc.Value);
+
+        if (!string.IsNullOrWhiteSpace(eventType))
+            query = query.Where(x => x.EventType == eventType);
+
+        if (!string.IsNullOrWhiteSpace(userId))
+            query = query.Where(x => x.UserId == userId);
+
+        if (!string.IsNullOrWhiteSpace(result))
+            query = query.Where(x => x.Result == result);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
             .OrderByDescending(x => x.TimestampUtc)
-            .Take(take)
-            .Select(x => new
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new AuditLogDto
             {
-                x.Id,
-                x.TimestampUtc,
-                x.EventType,
-                x.Result,
-                x.UserId,
-                x.UserEmail,
-                x.IpAddress,
-                x.UserAgent,
-                x.CorrelationId,
-                x.DataJson
+                Id = x.Id,
+                TimestampUtc = x.TimestampUtc,
+                EventType = x.EventType,
+                Result = x.Result,
+                UserId = x.UserId,
+                UserEmail = x.UserEmail,
+                IpAddress = x.IpAddress,
+                CorrelationId = x.CorrelationId,
+                DataJson = x.DataJson
             })
             .ToListAsync();
 
-        return Ok(list);
+        return Ok(new PagedAuditResponse
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            Items = items
+        });
     }
 }

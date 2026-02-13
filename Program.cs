@@ -8,6 +8,7 @@ using TimeTracker.Api.Domain.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.OpenApi.Models;
+using TimeTracker.Api.Middleware;
 
 Console.WriteLine("=== PROGRAM.CS LOADED ===");
 
@@ -57,7 +58,6 @@ builder.Services.AddHttpContextAccessor();
 
 // Audit DI (ahogy nálad volt, csak egyszer)
 builder.Services.AddScoped<TimeTracker.Api.Services.IAuditService, TimeTracker.Api.Services.AuditService>();
-builder.Services.AddScoped<TimeTracker.Api.Data.IAuditWriter, TimeTracker.Api.Data.AuditWriter>();
 builder.Services.AddScoped<TimeTracker.Api.Services.IAuditWriter, TimeTracker.Api.Services.DbAuditWriter>();
 
 // Razor Pages kell az Identity UI-hoz
@@ -205,7 +205,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseDeveloperExceptionPage();
+    app.UseMiddleware<GlobalExceptionMiddleware>();
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
@@ -227,6 +227,7 @@ app.UseRateLimiter();
 // Auth middlewares
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<AuditMiddleware>();
 
 
 app.MapGet("/", (HttpContext ctx) =>

@@ -17,20 +17,39 @@ public class ProjectsController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = Policies.HrOrAdmin)]
-    public async Task<List<Project>> Get() =>
-        await _db.Projects.AsNoTracking().OrderBy(x => x.Id).ToListAsync();
+    public async Task<List<ProjectListItemResponse>> Get() =>
+    await _db.Projects
+        .AsNoTracking()
+        .OrderBy(x => x.Id)
+        .Select(x => new ProjectListItemResponse
+        {
+            Id = x.Id,
+            Name = x.Name,
+            CreatedByUserId = x.CreatedByUserId
+        })
+        .ToListAsync();
 
     [HttpGet("{id:int}")]
     [Authorize(Policy = Policies.HrOrAdmin)]
-    public async Task<ActionResult<Project>> GetById(int id)
+    public async Task<ActionResult<ProjectResponse>> GetById(int id)
     {
-        var p = await _db.Projects.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+        var p = await _db.Projects
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => new ProjectResponse
+            {
+                Id = x.Id,
+                Name = x.Name,
+                CreatedByUserId = x.CreatedByUserId
+            })
+            .FirstOrDefaultAsync();
+
         return p is null ? NotFound() : Ok(p);
     }
 
     [HttpPost]
     [Authorize(Policy = Policies.HrOrAdmin)]
-    public async Task<ActionResult<Project>> Create([FromBody] CreateProjectRequest input)
+    public async Task<ActionResult<ProjectResponse>> Create([FromBody] CreateProjectRequest input)
     {
         if (string.IsNullOrWhiteSpace(input.Name))
             return BadRequest("Name is required.");
@@ -46,7 +65,14 @@ public class ProjectsController : ControllerBase
         _db.Projects.Add(p);
         await _db.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetById), new { id = p.Id }, p);
+        var dto = new ProjectResponse
+        {
+            Id = p.Id,
+            Name = p.Name,
+            CreatedByUserId = p.CreatedByUserId
+        };
+
+        return CreatedAtAction(nameof(GetById), new { id = p.Id }, dto);
     }
 
     public record AssignUserRequest(string UserId);
