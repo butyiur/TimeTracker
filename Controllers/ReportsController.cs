@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -5,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using TimeTracker.Api.Auth;
 using TimeTracker.Api.Contracts.Reports;
 using TimeTracker.Api.Data;
+
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
@@ -15,7 +17,7 @@ public class ReportsController : ControllerBase
     private readonly ApplicationDbContext _db;
     public ReportsController(ApplicationDbContext db) => _db = db;
 
-    // GET /api/reports/timeentries?from=2026-01-01&to=2026-01-31&projectId=1&userId=...&includeRunning=true
+    // GET /api/reports/timeentries?from=...&to=...&projectId=1&userId=...&includeRunning=true
     [HttpGet("timeentries")]
     public async Task<ActionResult<List<TimeEntryReportRow>>> GetTimeEntries(
         [FromQuery] string? from,
@@ -24,8 +26,8 @@ public class ReportsController : ControllerBase
         [FromQuery] string? userId,
         [FromQuery] bool includeRunning = false)
     {
-        var (fromUtc, toUtc, bad) = ParseRange(from, to);
-        if (bad is not null) return BadRequest(bad);
+        var (fromUtc, toUtc, error) = ParseRange(from, to);
+        if (error is not null) return BadRequest(error);
 
         var q =
             from te in _db.TimeEntries.AsNoTracking()
@@ -60,7 +62,7 @@ public class ReportsController : ControllerBase
                 x.te.EndUtc,
                 x.te.EndUtc == null
                     ? null
-                    : (int)Math.Round((x.te.EndUtc.Value - x.te.StartUtc).TotalMinutes)
+                    : EF.Functions.DateDiffMinute(x.te.StartUtc, x.te.EndUtc.Value)
             ))
             .ToListAsync();
 
@@ -75,8 +77,9 @@ public class ReportsController : ControllerBase
     [FromQuery] int? projectId,
     [FromQuery] string? userId)
     {
-        var (fromUtc, toUtc, bad) = ParseRange(from, to);
-        if (bad is not null) return BadRequest(bad);
+        var (fromUtc, toUtc, error) = ParseRange(from, to);
+        if (error is not null)
+            return BadRequest(error);
 
         var q =
             from te in _db.TimeEntries.AsNoTracking()
@@ -85,11 +88,12 @@ public class ReportsController : ControllerBase
             join u in _db.Users.AsNoTracking() on te.OwnerUserId equals u.Id
             select new
             {
-                te,
-                ProjectId = p.Id,
+                te.ProjectId,
                 ProjectName = p.Name,
                 UserId = u.Id,
-                UserEmail = u.Email ?? u.UserName ?? u.Id
+                UserEmail = u.Email ?? u.UserName ?? u.Id,
+                te.StartUtc,
+                te.EndUtc
             };
 
         if (projectId is not null)
@@ -99,33 +103,35 @@ public class ReportsController : ControllerBase
             q = q.Where(x => x.UserId == userId);
 
         if (fromUtc is not null)
-            q = q.Where(x => x.te.StartUtc >= fromUtc.Value);
+            q = q.Where(x => x.StartUtc >= fromUtc.Value);
 
         if (toUtc is not null)
-            q = q.Where(x => x.te.StartUtc < toUtc.Value);
+            q = q.Where(x => x.StartUtc < toUtc.Value);
 
-        var list = await q
-            .Select(x => new
+        var rawData = await q.ToListAsync();
+
+        var result = rawData
+            .GroupBy(x => new
             {
                 x.ProjectId,
                 x.ProjectName,
                 x.UserId,
-                x.UserEmail,
-                Minutes = (int)Math.Round((x.te.EndUtc!.Value - x.te.StartUtc).TotalMinutes)
+                x.UserEmail
             })
-            .GroupBy(x => new { x.ProjectId, x.ProjectName, x.UserId, x.UserEmail })
             .Select(g => new TimeEntrySummaryRow(
                 g.Key.ProjectId,
                 g.Key.ProjectName,
                 g.Key.UserId,
                 g.Key.UserEmail,
-                g.Sum(x => x.Minutes)
+                g.Sum(e =>
+                    (int)Math.Round(
+                        (e.EndUtc!.Value - e.StartUtc).TotalMinutes))
             ))
             .OrderBy(x => x.ProjectName)
             .ThenBy(x => x.UserEmail)
-            .ToListAsync();
+            .ToList();
 
-        return Ok(list);
+        return Ok(result);
     }
 
     // GET /api/reports/export.csv?from=...&to=...&projectId=...&userId=...&includeRunning=true
@@ -140,7 +146,7 @@ public class ReportsController : ControllerBase
         var res = await GetTimeEntries(from, to, projectId, userId, includeRunning);
         if (res.Result is BadRequestObjectResult bad) return bad;
 
-        var list = (res.Value ?? new List<TimeEntryReportRow>());
+        var list = res.Value ?? new List<TimeEntryReportRow>();
 
         var sb = new StringBuilder();
         sb.AppendLine("EntryId,ProjectId,ProjectName,UserId,UserEmail,StartUtc,EndUtc,DurationMinutes");
@@ -159,16 +165,16 @@ public class ReportsController : ControllerBase
             ));
         }
 
-        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-        return File(bytes, "text/csv; charset=utf-8", "timetracker-export.csv");
+        return File(Encoding.UTF8.GetBytes(sb.ToString()),
+            "text/csv; charset=utf-8",
+            "timetracker-export.csv");
     }
 
     private static string Csv(string? s)
     {
         s ??= "";
         var needsQuotes = s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r');
-        if (!needsQuotes) return s;
-        return "\"" + s.Replace("\"", "\"\"") + "\"";
+        return needsQuotes ? "\"" + s.Replace("\"", "\"\"") + "\"" : s;
     }
 
     private static (DateTime? fromUtc, DateTime? toUtc, string? error) ParseRange(string? from, string? to)
@@ -178,17 +184,20 @@ public class ReportsController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(from))
         {
-            if (!DateTime.TryParse(from, out var tmp))
-                return (null, null, "Invalid 'from' date.");
-            f = DateTime.SpecifyKind(tmp, DateTimeKind.Utc);
+            if (!DateTimeOffset.TryParse(from, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dto))
+                return (null, null, "Invalid 'from' date. Use ISO 8601, e.g. 2026-02-16T15:16:41Z");
+
+            f = dto.UtcDateTime;
         }
 
         if (!string.IsNullOrWhiteSpace(to))
         {
-            if (!DateTime.TryParse(to, out var tmp))
-                return (null, null, "Invalid 'to' date.");
-            // to exclusive: add 1 day if only date was passed? túl sok okoskodás, marad így.
-            t = DateTime.SpecifyKind(tmp, DateTimeKind.Utc);
+            if (!DateTimeOffset.TryParse(to, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var dto))
+                return (null, null, "Invalid 'to' date. Use ISO 8601, e.g. 2026-02-16T18:00:00Z");
+
+            t = dto.UtcDateTime;
         }
 
         if (f is not null && t is not null && f >= t)

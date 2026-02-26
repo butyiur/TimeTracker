@@ -52,10 +52,10 @@ public static class OpenIddictSeeder
     }
 
     private static async Task EnsureSpaClient(
-        IOpenIddictApplicationManager appManager,
-        string clientId,
-        string redirectUri,
-        string postLogoutRedirectUri)
+    IOpenIddictApplicationManager appManager,
+    string clientId,
+    string redirectUri,
+    string postLogoutRedirectUri)
     {
         if (await appManager.FindByClientIdAsync(clientId) is not null)
             return;
@@ -64,36 +64,35 @@ public static class OpenIddictSeeder
         {
             ClientId = clientId,
             DisplayName = clientId,
-
-            ClientType = ClientTypes.Public,             //  SPA = public client (nincs client_secret)
-            ConsentType = ConsentTypes.Explicit,    //  tiszta, OIDC-kompatibilis
+            ClientType = OpenIddictConstants.ClientTypes.Public,
+            ConsentType = OpenIddictConstants.ConsentTypes.Implicit,
 
             RedirectUris = { new Uri(redirectUri) },
             PostLogoutRedirectUris = { new Uri(postLogoutRedirectUri) },
 
             Permissions =
-            {
-                Permissions.Endpoints.Authorization,
-                Permissions.Endpoints.Token,
+        {
+            OpenIddictConstants.Permissions.Endpoints.Authorization,
+            OpenIddictConstants.Permissions.Endpoints.Token,
 
-                Permissions.GrantTypes.AuthorizationCode,   
-                Permissions.GrantTypes.RefreshToken,
+            OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+            OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+            OpenIddictConstants.Permissions.ResponseTypes.Code,
 
-                Permissions.ResponseTypes.Code,
-
-                //  scope permissioneket MIND prefixelve add meg
-                Permissions.Prefixes.Scope + "api",
-                Permissions.Prefixes.Scope + Scopes.Profile,
-                Permissions.Prefixes.Scope + Scopes.Email,
-                Permissions.Prefixes.Scope + Scopes.Roles,
-                Permissions.Prefixes.Scope + Scopes.OfflineAccess,
-                Permissions.Prefixes.Scope + "offline_access",
-            },
+            // OIDC scope-ok: nálad a verzióban NINCS Permissions.Scopes.OpenId stb,
+            // ezért prefix-szel add meg:
+            OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
+            OpenIddictConstants.Permissions.Prefixes.Scope + "profile",
+            OpenIddictConstants.Permissions.Prefixes.Scope + "email",
+            OpenIddictConstants.Permissions.Prefixes.Scope + "roles",
+            OpenIddictConstants.Permissions.Prefixes.Scope + "api",
+            OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictConstants.Scopes.OfflineAccess
+        },
 
             Requirements =
-            {
-                Requirements.Features.ProofKeyForCodeExchange
-            }
+        {
+            OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange
+        }
         });
     }
 

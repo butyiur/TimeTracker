@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
-[Route("api/auth")]
+[Route("api/auth/debug")]
 public class AuthDebugController : ControllerBase
 {
     [HttpGet("me")]

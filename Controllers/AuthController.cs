@@ -1,93 +1,33 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
-using OpenIddict.Abstractions;
-using OpenIddict.Server.AspNetCore;
 using TimeTracker.Api.Domain.Identity;
-using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
-public class AuthorizationController : ControllerBase
+[Route("api/auth")]
+public class AuthController : ControllerBase
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
-    public AuthorizationController(UserManager<ApplicationUser> userManager)
-        => _userManager = userManager;
-
-    [EnableRateLimiting("auth")]
-    [HttpGet("~/connect/authorize")]
-    public async Task<IActionResult> Authorize()
+    public AuthController(SignInManager<ApplicationUser> signInManager)
     {
-        var request = HttpContext.GetOpenIddictServerRequest()
-            ?? throw new InvalidOperationException("OpenIddict request is missing.");
-
-        var cookieAuth = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
-
-        if (!cookieAuth.Succeeded || cookieAuth.Principal?.Identity?.IsAuthenticated != true)
-        {
-            return Challenge(new AuthenticationProperties
-            {
-                RedirectUri = Request.PathBase + Request.Path + Request.QueryString.Value
-            }, IdentityConstants.ApplicationScheme);
-        }
-
-        var user = await _userManager.GetUserAsync(cookieAuth.Principal);
-        if (user is null) return Forbid();
-
-        var principal = await _userManager.CreatePrincipalAsync(user);
-
-        principal.SetScopes(request.GetScopes());
-        principal.SetResources("api");
-
-        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        _signInManager = signInManager;
     }
 
-    [EnableRateLimiting("auth")]
-    [HttpPost("~/connect/token")]
-    public async Task<IActionResult> Exchange()
+    // GET /api/auth/cookie-logout?returnUrl=http://localhost:4200/
+    [HttpGet("cookie-logout")]
+    [AllowAnonymous]
+    public async Task<IActionResult> CookieLogout([FromQuery] string? returnUrl = null)
     {
-        var request = HttpContext.GetOpenIddictServerRequest()
-            ?? throw new InvalidOperationException("OpenIddict request is missing.");
+        await _signInManager.SignOutAsync();
+        await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
 
-        if (!request.IsAuthorizationCodeGrantType() && !request.IsRefreshTokenGrantType())
-            return BadRequest(new { error = "unsupported_grant_type" });
+        if (string.IsNullOrWhiteSpace(returnUrl))
+            returnUrl = "http://localhost:4200/";
 
-        var result = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-        if (result.Principal is null) return Forbid();
-
-        return SignIn(result.Principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-    }
-}
-
-internal static class UserManagerExtensions
-{
-    public static async Task<ClaimsPrincipal> CreatePrincipalAsync(
-        this UserManager<ApplicationUser> userManager,
-        ApplicationUser user)
-    {
-        var identity = new ClaimsIdentity(
-            authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
-            nameType: Claims.Name,
-            roleType: Claims.Role);
-
-        identity.AddClaim(new Claim(Claims.Subject, user.Id)
-            .SetDestinations(Destinations.AccessToken));
-
-        identity.AddClaim(new Claim(Claims.Name, user.Email ?? user.UserName ?? user.Id)
-            .SetDestinations(Destinations.AccessToken));
-
-        var roles = await userManager.GetRolesAsync(user);
-        foreach (var role in roles)
-        {
-            identity.AddClaim(new Claim(Claims.Role, role)
-                .SetDestinations(Destinations.AccessToken));
-        }
-
-        return new ClaimsPrincipal(identity);
+        return Redirect(returnUrl);
     }
 }

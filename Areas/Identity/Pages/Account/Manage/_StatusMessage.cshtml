@@ -1,0 +1,15 @@
+@* Minimal Identity status message partial *@
+@{
+    var message = TempData["StatusMessage"] as string;
+}
+
+@if (!string.IsNullOrWhiteSpace(message))
+{
+    var statusClass = message.StartsWith("Error", StringComparison.OrdinalIgnoreCase)
+        ? "alert-danger"
+        : "alert-success";
+
+    <div class="alert @statusClass" role="alert">
+        @message
+    </div>
+}

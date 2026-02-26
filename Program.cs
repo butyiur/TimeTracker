@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Validation.AspNetCore;
-using System.Security.Claims;
 using TimeTracker.Api.Auth;
 using TimeTracker.Api.Data;
 using TimeTracker.Api.Domain.Identity;
@@ -9,6 +8,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.OpenApi.Models;
 using TimeTracker.Api.Middleware;
+using OpenIddict.Server.AspNetCore;
 
 Console.WriteLine("=== PROGRAM.CS LOADED ===");
 
@@ -76,7 +76,11 @@ builder.Services
     {
         options.User.RequireUniqueEmail = true;
         options.Password.RequiredLength = 8;
+
         options.SignIn.RequireConfirmedAccount = false;
+
+        // 2FA működéshez hasznos (nem kötelező, de tiszta)
+        options.SignIn.RequireConfirmedEmail = false;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
@@ -106,9 +110,9 @@ builder.Services.AddOpenIddict()
                .AddDevelopmentSigningCertificate();
 
         options.UseAspNetCore()
-            .EnableAuthorizationEndpointPassthrough()
-            .EnableTokenEndpointPassthrough()
-            .EnableStatusCodePagesIntegration();
+            .EnableStatusCodePagesIntegration()
+            //.EnableTokenEndpointPassthrough()
+            .EnableAuthorizationEndpointPassthrough();
 
         options.DisableAccessTokenEncryption(); // ok devben
     })
@@ -117,6 +121,26 @@ builder.Services.AddOpenIddict()
         options.UseLocalServer();
         options.UseAspNetCore();
     });
+
+
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "Dynamic";
+    options.DefaultChallengeScheme = "Dynamic";
+})
+.AddPolicyScheme("Dynamic", "Dynamic", options =>
+{
+    options.ForwardDefaultSelector = context =>
+    {
+        var path = context.Request.Path;
+
+        if (path.StartsWithSegments("/connect") || path.StartsWithSegments("/.well-known"))
+            return OpenIddictServerAspNetCoreDefaults.AuthenticationScheme;
+
+        return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+    };
+});
 
 // Authorization policies
 builder.Services.AddAuthorization(options =>
@@ -169,21 +193,26 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Rate limiting
 builder.Services.AddRateLimiter(options =>
 {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-
-    options.AddPolicy("auth", httpContext =>
+    options.AddPolicy("default", context =>
     {
-        var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        return RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: ip,
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 30,
-                Window = TimeSpan.FromMinutes(1),
-                QueueLimit = 0,
-                AutoReplenishment = true
-            });
+        var path = context.Request.Path.Value ?? "";
+
+        if (path.StartsWith("/connect", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/.well-known", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/Identity", StringComparison.OrdinalIgnoreCase))
+        {
+            return RateLimitPartition.GetNoLimiter("nolimit");
+        }
+
+        return RateLimitPartition.GetFixedWindowLimiter("fixed", _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 100,
+            Window = TimeSpan.FromMinutes(1)
+        });
     });
+
+    
+
 
     options.AddPolicy("admin", httpContext =>
     {
@@ -200,84 +229,80 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("spa", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseMiddleware<GlobalExceptionMiddleware>();
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TimeTracker.Api v1");
 
-        c.OAuthClientId("timetracker-swagger");     // ez nálad már seeded
-        c.OAuthAppName("TimeTracker Swagger");
-        c.OAuthUsePkce();                           // PKCE kötelező
-        c.OAuthScopes("api", "offline_access");     // ha nem kell refresh: csak "api"
-    });
-}
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers["X-App-Instance"] = "TimeTracker.Api";
+    await next();
+});
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TimeTracker.Api v1");
+
+    c.OAuthClientId("timetracker-swagger");
+    c.OAuthAppName("TimeTracker Swagger");
+
+    c.OAuthUsePkce();                 // PKCE kötelező a kliens miatt
+    c.OAuthScopes("api", "offline_access"); // csak akkor, ha tényleg kell refresh token
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// Rate limiter middleware
-app.UseRateLimiter();
-
-// Auth middlewares
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseMiddleware<AuditMiddleware>();
-
-
-app.MapGet("/", (HttpContext ctx) =>
+app.UseRouting();
+app.Use(async (ctx, next) =>
 {
-    if (app.Environment.IsDevelopment())
-        return Results.Redirect("/swagger");
-    return Results.Ok("TimeTracker API");
+    if (ctx.Request.Path.StartsWithSegments("/connect/authorize"))
+        Console.WriteLine("=== HIT /connect/authorize === " + ctx.Request.Method + " " + ctx.Request.Path + ctx.Request.QueryString);
+
+    await next();
+
+    if (ctx.Request.Path.StartsWithSegments("/connect/authorize"))
+        Console.WriteLine("=== AFTER /connect/authorize === Status " + ctx.Response.StatusCode);
 });
 
-// Endpoints
+
+app.UseCors("spa");
+
+// (Rate limiter csak a normál API-ra, connect-re NE)
+// csak akkor limitálunk, ha NEM /connect, NEM /.well-known, NEM /Identity
+//app.UseWhen(
+// ctx => !(ctx.Request.Path.StartsWithSegments("/connect")
+//   || ctx.Request.Path.StartsWithSegments("/.well-known")
+//|| ctx.Request.Path.StartsWithSegments("/Identity")),
+//branch =>
+// {
+//branch.UseRateLimiter();
+//});
+
+//app.UseRateLimiter();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 app.MapRazorPages();
-
-// ✅ DI DUMP: legyen a seeder ELŐTT, mert most azt debugoljuk
 if (app.Environment.IsDevelopment())
 {
-    using var scope = app.Services.CreateScope();
-    var store = scope.ServiceProvider.GetService<IUserStore<ApplicationUser>>();
-    var roleStore = scope.ServiceProvider.GetService<IUserRoleStore<ApplicationUser>>();
-
-    Console.WriteLine("IUserStore<ApplicationUser> = " + store?.GetType().FullName);
-    Console.WriteLine("IUserRoleStore<ApplicationUser> = " + roleStore?.GetType().FullName);
-}
-
-// ✅ Seeder most már nem fog RoleStore hibán elhasalni
-await IdentitySeeder.SeedAsync(app.Services);
-await OpenIddictSeeder.SeedAsync(app.Services);
-
-// DEBUG endpointok
-if (app.Environment.IsDevelopment())
-{
-    app.MapGet("/secure", (ClaimsPrincipal user) =>
-    {
-        return Results.Ok(new
-        {
-            name = user.Identity?.Name,
-            claims = user.Claims.Select(c => new { c.Type, c.Value })
-        });
-    })
-    .WithDisplayName("HTTP: GET /secure")
-    .RequireAuthorization(policy =>
-    {
-        policy.AddAuthenticationSchemes(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
-        policy.RequireAuthenticatedUser();
-    });
-
     app.MapGet("/debug/endpoints", (IEnumerable<EndpointDataSource> sources) =>
     {
-        var list = sources
-            .SelectMany(s => s.Endpoints)
+        var list = sources.SelectMany(s => s.Endpoints)
             .Select(e => new
             {
                 displayName = e.DisplayName,
@@ -286,8 +311,10 @@ if (app.Environment.IsDevelopment())
             .ToList();
 
         return Results.Ok(list);
-    })
-    .WithDisplayName("HTTP: GET /debug/endpoints");
+    });
 }
+
+await IdentitySeeder.SeedAsync(app.Services);
+await OpenIddictSeeder.SeedAsync(app.Services);
 
 app.Run();
