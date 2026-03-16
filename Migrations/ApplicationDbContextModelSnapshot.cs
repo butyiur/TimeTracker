@@ -440,6 +440,11 @@ namespace TimeTracker.Api.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("EmploymentActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -462,6 +467,14 @@ namespace TimeTracker.Api.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("RegistrationApproved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTimeOffset?>("RegistrationRequestedAtUtc")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -522,6 +535,61 @@ namespace TimeTracker.Api.Migrations
                     b.ToTable("Approvals");
                 });
 
+            modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.ManualTimeEntryRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("EndUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequesterUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("ReviewedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReviewerComment")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ReviewerUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TaskId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("RequesterUserId", "Status", "CreatedAtUtc");
+
+                    b.ToTable("ManualTimeEntryRequests");
+                });
+
             modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -538,6 +606,14 @@ namespace TimeTracker.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int?>("PlannedHours")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -566,6 +642,38 @@ namespace TimeTracker.Api.Migrations
                     b.ToTable("ProjectAssignments");
                 });
 
+            modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.ProjectTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int?>("PlannedHours")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "Name");
+
+                    b.ToTable("ProjectTasks");
+                });
+
             modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.TimeEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -573,6 +681,10 @@ namespace TimeTracker.Api.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime?>("EndUtc")
                         .HasColumnType("datetime2");
@@ -587,11 +699,16 @@ namespace TimeTracker.Api.Migrations
                     b.Property<DateTime>("StartUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("TaskId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerUserId");
 
                     b.HasIndex("ProjectId");
+
+                    b.HasIndex("TaskId");
 
                     b.ToTable("TimeEntries");
                 });
@@ -671,6 +788,16 @@ namespace TimeTracker.Api.Migrations
                     b.Navigation("Authorization");
                 });
 
+            modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.ManualTimeEntryRequest", b =>
+                {
+                    b.HasOne("TimeTracker.Api.Domain.TimeTracking.ProjectTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Task");
+                });
+
             modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.Project", b =>
                 {
                     b.HasOne("TimeTracker.Api.Domain.Identity.ApplicationUser", "CreatedByUser")
@@ -701,6 +828,17 @@ namespace TimeTracker.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.ProjectTask", b =>
+                {
+                    b.HasOne("TimeTracker.Api.Domain.TimeTracking.Project", "Project")
+                        .WithMany("Tasks")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.TimeEntry", b =>
                 {
                     b.HasOne("TimeTracker.Api.Domain.Identity.ApplicationUser", "OwnerUser")
@@ -715,9 +853,16 @@ namespace TimeTracker.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("TimeTracker.Api.Domain.TimeTracking.ProjectTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("OwnerUser");
 
                     b.Navigation("Project");
+
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>
@@ -735,6 +880,8 @@ namespace TimeTracker.Api.Migrations
             modelBuilder.Entity("TimeTracker.Api.Domain.TimeTracking.Project", b =>
                 {
                     b.Navigation("Assignments");
+
+                    b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618
         }

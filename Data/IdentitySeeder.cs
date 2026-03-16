@@ -23,9 +23,9 @@ public static class IdentitySeeder
         }
 
         // Dev users
-        await EnsureUser(userManager, Roles.Employee, "employee@local", "Employee123!");
-        await EnsureUser(userManager, Roles.HR, "hr@local", "Hr123456!");
-        await EnsureUser(userManager, Roles.Admin, "admin@local", "Admin123!");
+        await EnsureUser(userManager, Roles.Employee, "employee@local", "Employee.Local.2026!Pass");
+        await EnsureUser(userManager, Roles.HR, "hr@local", "Hr.Local.2026!StrongPass");
+        await EnsureUser(userManager, Roles.Admin, "admin@local", "Admin.Local.2026!StrongPass");
     }
 
     private static async Task EnsureUser(

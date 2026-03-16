@@ -1,0 +1,43 @@
+<svg width="768" height="1365" viewBox="0 0 768 1365" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="40" y1="20" x2="720" y2="1300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4B0A86"/>
+      <stop offset="0.5" stop-color="#3A056F"/>
+      <stop offset="1" stop-color="#2E035D"/>
+    </linearGradient>
+    <linearGradient id="blob1" x1="120" y1="350" x2="520" y2="640" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF2BC2"/>
+      <stop offset="0.7" stop-color="#8A00D1"/>
+      <stop offset="1" stop-color="#5A00AA"/>
+    </linearGradient>
+    <linearGradient id="blob2" x1="340" y1="640" x2="760" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF3BC8"/>
+      <stop offset="0.75" stop-color="#9200D4"/>
+      <stop offset="1" stop-color="#5A00AC"/>
+    </linearGradient>
+    <linearGradient id="blob3" x1="-120" y1="980" x2="520" y2="1320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FA27BE"/>
+      <stop offset="0.8" stop-color="#7A00C0"/>
+      <stop offset="1" stop-color="#4E009B"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+  </defs>
+
+  <rect width="768" height="1365" fill="url(#bg)"/>
+
+  <ellipse cx="-40" cy="170" rx="170" ry="130" fill="#C5009D" opacity="0.85"/>
+  <ellipse cx="180" cy="90" rx="250" ry="150" fill="#5C00B5" opacity="0.32"/>
+
+  <path d="M55 308C124 260 248 258 322 296C390 331 434 402 501 444C562 482 651 487 699 533C748 580 752 668 706 716C658 766 560 764 492 743C425 723 390 686 331 665C265 640 175 640 116 594C57 549 29 465 45 400C52 369 60 337 55 308Z" fill="url(#blob1)"/>
+  <path d="M288 640C357 584 480 578 567 613C654 647 721 722 736 805C750 884 709 959 637 1001C565 1043 462 1051 382 1017C304 984 256 912 246 836C237 761 237 683 288 640Z" fill="url(#blob2)"/>
+  <path d="M-60 1002C15 932 136 902 241 915C343 929 433 982 473 1062C512 1142 497 1248 430 1312C361 1376 244 1398 137 1368C33 1338 -56 1256 -89 1154C-122 1053 -132 1068 -60 1002Z" fill="url(#blob3)"/>
+
+  <ellipse cx="221" cy="648" rx="160" ry="38" fill="#62F9FF" opacity="0.78" filter="url(#glow)"/>
+  <ellipse cx="546" cy="982" rx="146" ry="34" fill="#62F9FF" opacity="0.78" filter="url(#glow)"/>
+  <ellipse cx="109" cy="1223" rx="158" ry="36" fill="#62F9FF" opacity="0.7" filter="url(#glow)"/>
+
+  <circle cx="580" cy="1098" r="56" fill="url(#blob2)"/>
+  <ellipse cx="580" cy="1140" rx="36" ry="12" fill="#62F9FF" opacity="0.84" filter="url(#glow)"/>
+</svg>

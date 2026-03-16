@@ -1,14 +1,18 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using OpenIddict.Validation.AspNetCore;
+using OpenIddict.Abstractions;
 using TimeTracker.Api.Auth;
 using TimeTracker.Api.Data;
 using TimeTracker.Api.Domain.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using System.Security.Claims;
 using Microsoft.OpenApi.Models;
 using TimeTracker.Api.Middleware;
 using OpenIddict.Server.AspNetCore;
+using TimeTracker.Api.Services;
 
 Console.WriteLine("=== PROGRAM.CS LOADED ===");
 
@@ -55,10 +59,15 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<ISecurityPolicyStore, JsonSecurityPolicyStore>();
+builder.Services.AddScoped<IPasswordValidator<ApplicationUser>, DynamicPasswordPolicyValidator>();
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 // Audit DI (ahogy nálad volt, csak egyszer)
 builder.Services.AddScoped<TimeTracker.Api.Services.IAuditService, TimeTracker.Api.Services.AuditService>();
 builder.Services.AddScoped<TimeTracker.Api.Services.IAuditWriter, TimeTracker.Api.Services.DbAuditWriter>();
+builder.Services.AddScoped<TimeTracker.Api.Data.IAuditWriter, TimeTracker.Api.Data.AuditWriter>();
 
 // Razor Pages kell az Identity UI-hoz
 builder.Services.AddRazorPages();
@@ -75,7 +84,12 @@ builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.User.RequireUniqueEmail = true;
-        options.Password.RequiredLength = 8;
+        options.Password.RequiredLength = 1;
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredUniqueChars = 1;
 
         options.SignIn.RequireConfirmedAccount = false;
 
@@ -145,16 +159,7 @@ builder.Services.AddAuthentication(options =>
 // Authorization policies
 builder.Services.AddAuthorization(options =>
 {
-
     Policies.AddTimeTrackerPolicies(options);
-    options.AddPolicy(Policies.EmployeeOnly, p =>
-        p.RequireAuthenticatedUser().RequireRole(Roles.Employee));
-
-    options.AddPolicy(Policies.HrOnly, p =>
-        p.RequireAuthenticatedUser().RequireRole(Roles.HR));
-
-    options.AddPolicy(Policies.AdminOnly, p =>
-        p.RequireAuthenticatedUser().RequireRole(Roles.Admin));
 });
 
 // API-barát cookie redirect-ek
@@ -187,6 +192,22 @@ builder.Services.ConfigureApplicationCookie(options =>
 
         ctx.Response.StatusCode = 403;
         return Task.CompletedTask;
+    };
+
+    options.Events.OnValidatePrincipal = async ctx =>
+    {
+        var issuedUtc = ctx.Properties.IssuedUtc;
+        if (issuedUtc is null) return;
+
+        var policyStore = ctx.HttpContext.RequestServices.GetRequiredService<ISecurityPolicyStore>();
+        var policy = await policyStore.GetAsync();
+
+        var elapsed = DateTimeOffset.UtcNow - issuedUtc.Value;
+        if (elapsed > TimeSpan.FromMinutes(policy.SessionTimeoutMinutes))
+        {
+            ctx.RejectPrincipal();
+            await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+        }
     };
 });
 
@@ -294,6 +315,64 @@ app.UseCors("spa");
 //app.UseRateLimiter();
 
 app.UseAuthentication();
+
+app.Use(async (ctx, next) =>
+{
+    if (!ctx.Request.Path.StartsWithSegments("/api"))
+    {
+        await next();
+        return;
+    }
+
+    if (ctx.User?.Identity?.IsAuthenticated != true)
+    {
+        await next();
+        return;
+    }
+
+    var userId =
+        ctx.User.FindFirstValue(OpenIddictConstants.Claims.Subject)
+        ?? ctx.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+    if (string.IsNullOrWhiteSpace(userId))
+    {
+        await next();
+        return;
+    }
+
+    var userManager = ctx.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+    var user = await userManager.FindByIdAsync(userId);
+    if (user is null)
+    {
+        ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        await ctx.Response.WriteAsJsonAsync(new { error = "user_not_found" });
+        return;
+    }
+
+    if (!user.RegistrationApproved)
+    {
+        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await ctx.Response.WriteAsJsonAsync(new { error = "pending_registration_approval" });
+        return;
+    }
+
+    if (!user.EmploymentActive)
+    {
+        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+        await ctx.Response.WriteAsJsonAsync(new { error = "inactive_profile" });
+        return;
+    }
+
+    if (await userManager.IsLockedOutAsync(user))
+    {
+        ctx.Response.StatusCode = StatusCodes.Status423Locked;
+        await ctx.Response.WriteAsJsonAsync(new { error = "account_locked" });
+        return;
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 
 app.MapControllers();

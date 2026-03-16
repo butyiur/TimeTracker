@@ -9,9 +9,13 @@ public class TimeEntry
     public int ProjectId { get; set; }
     public Project Project { get; set; } = null!;
 
+    public int? TaskId { get; set; }
+    public ProjectTask? Task { get; set; }
+
     public string OwnerUserId { get; set; } = null!;
     public ApplicationUser OwnerUser { get; set; } = null!;
 
     public DateTime StartUtc { get; set; }
     public DateTime? EndUtc { get; set; }
+    public string? Description { get; set; }
 }

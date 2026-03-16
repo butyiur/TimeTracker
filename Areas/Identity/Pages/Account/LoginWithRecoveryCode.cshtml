@@ -1,28 +1,167 @@
 ﻿@page
 @model LoginWithRecoveryCodeModel
 @{
-    ViewData["Title"] = "Recovery code verification";
+    Layout = null;
+    ViewData["Title"] = "Helyreállító kód";
 }
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TimeTracker</title>
+</head>
+<body>
+<style>
+    .auth-page {
+        min-height: 100vh;
+        padding: 22px;
+        background:
+            radial-gradient(1200px 520px at 10% -10%, #9e8cff 0%, rgba(158, 140, 255, 0) 58%),
+            radial-gradient(1000px 460px at 100% 120%, #6f5cff 0%, rgba(111, 92, 255, 0) 60%),
+            linear-gradient(145deg, #efeefe 0%, #e3e8ff 48%, #d9def8 100%);
+        display: grid;
+        place-items: center;
+    }
+    .auth-shell {
+        width: min(1040px, 100%);
+        display: grid;
+        grid-template-columns: 1.05fr .95fr;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #dadff2;
+        box-shadow: 0 24px 52px rgba(34, 24, 86, .18);
+    }
+    .hero {
+        position: relative;
+        min-height: 560px;
+        padding: 26px;
+        display: grid;
+        align-content: space-between;
+        color: #f9f8ff;
+        background:
+            linear-gradient(165deg, rgba(28, 14, 70, .68), rgba(53, 20, 118, .54)),
+            url('/auth/blob-bg.svg');
+        background-size: cover;
+        background-position: center;
+    }
+    .hero:before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(170deg, rgba(20, 10, 57, .34), rgba(20, 10, 57, .7));
+        backdrop-filter: blur(1.8px);
+        pointer-events: none;
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .brand { font-size: 1.45rem; font-weight: 800; letter-spacing: .08em; }
+    .hero-title { font-size: 2rem; line-height: 1.1; max-width: 360px; margin: 0; }
+    .hero-sub { opacity: .9; max-width: 340px; }
+    .panel { padding: 38px 36px; display: grid; align-content: center; gap: 12px; background: linear-gradient(180deg, #fff, #f9f9ff); }
+    .panel h1 { margin: 0; font-size: 2rem; color: #211a4b; text-align: center; }
+    .muted { color: #675f88; margin-bottom: 6px; }
+    .text-danger,
+    .field-validation-error,
+    .validation-summary-errors,
+    .validation-summary-errors ul,
+    .validation-summary-errors li,
+    [data-valmsg-for],
+    [data-valmsg-summary="true"] {
+        color: #ff4d6d !important;
+    }
+    [data-valmsg-for],
+    [data-valmsg-summary="true"] {
+        font-weight: 700;
+    }
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 20px;
+        font-weight: 700;
+    }
+    .input-validation-error {
+        border-color: #ff4d6d !important;
+        box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.16);
+    }
+    .field { display: grid; gap: 7px; }
+    .field label { color: #271f5a; font-weight: 600; }
+    .field input { padding: 11px 12px; border: 1px solid #d7dbef; border-radius: 12px; width: 100%; box-sizing: border-box; }
+    .btn-main {
+        width: 100%;
+        border: 1px solid #5d4ad2;
+        background: linear-gradient(135deg, #6b58df, #4f3ab9);
+        color: #fff;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-weight: 700;
+    }
+    .link-row { display: flex; gap: 16px; }
+    .link-btn {
+        flex: 1 1 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 58px;
+        border: 1px solid #d7dbef;
+        border-radius: 12px;
+        padding: 9px 13px;
+        text-decoration: none;
+        color: #271f5a;
+        font-weight: 600;
+        line-height: 1.2;
+        background: #fff;
+        text-align: center;
+        box-sizing: border-box;
+    }
+    .link-btn-single > span {
+        position: relative;
+        top: 3px;
+    }
+    @@media (max-width: 900px) {
+        .auth-page { padding: 14px; }
+        .auth-shell { grid-template-columns: 1fr; }
+        .hero { min-height: 220px; }
+        .hero-title { font-size: 1.5rem; }
+        .panel { padding: 24px 18px; }
+        .link-row { flex-direction: column; }
+    }
+</style>
 
-<h1>@ViewData["Title"]</h1>
-<hr />
-<p>
-    You have requested to log in with a recovery code. This login will not be remembered until you provide
-    an authenticator app code at log in or disable 2FA and log in again.
-</p>
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.RecoveryCode" class="form-control" autocomplete="off" placeholder="RecoveryCode" />
-                <label asp-for="Input.RecoveryCode" class="form-label"></label>
-                <span asp-validation-for="Input.RecoveryCode" class="text-danger"></span>
+<div class="auth-page">
+    <section class="auth-shell">
+        <aside class="hero">
+            <div class="brand">TIMETRACKER</div>
+            <div>
+                <p class="hero-title">Biztonságos munkaidő-kezelés, vezetői rálátással</p>
+                <p class="hero-sub">Központi beléptetés, auditálható jogosultságkezelés és döntéstámogató riportok egy egységes felületen.</p>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-        </form>
-    </div>
+        </aside>
+
+        <div class="panel">
+            <h1>Helyreállító kód</h1>
+            <div class="muted">Ha nincs nálad az authenticator alkalmazás, add meg az egyik korábban elmentett helyreállító kódodat.</div>
+
+            <form method="post" style="display:grid; gap:10px;">
+                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                <div class="field">
+                    <label asp-for="Input.RecoveryCode">Helyreállító kód</label>
+                    <input asp-for="Input.RecoveryCode" autocomplete="off" placeholder="xxxx-xxxx" />
+                    <span asp-validation-for="Input.RecoveryCode" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn-main">Belépés helyreállító kóddal</button>
+            </form>
+
+            <div class="link-row">
+                <a class="link-btn" asp-page="./LoginWith2fa" asp-route-returnUrl="@Model.ReturnUrl"><span>Vissza az authenticator kódhoz</span></a>
+                <a class="link-btn link-btn-single" href="http://localhost:4200/login"><span>Vissza a belépéshez</span></a>
+            </div>
+        </div>
+    </section>
 </div>
+</body>
+</html>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

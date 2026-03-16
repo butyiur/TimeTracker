@@ -25,13 +25,15 @@ namespace TimeTracker.Api.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly TimeTracker.Api.Services.IAuditService _audit;
+        private readonly ISecurityPolicyStore _securityPolicyStore;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager,UserManager<ApplicationUser> userManager,TimeTracker.Api.Services.IAuditService audit,ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<ApplicationUser> signInManager,UserManager<ApplicationUser> userManager,TimeTracker.Api.Services.IAuditService audit,ISecurityPolicyStore securityPolicyStore,ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _audit = audit;
+            _securityPolicyStore = securityPolicyStore;
             _logger = logger;
         }
 
@@ -72,7 +74,6 @@ namespace TimeTracker.Api.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Required]
-            [EmailAddress]
             public string Email { get; set; }
 
             /// <summary>
@@ -117,41 +118,94 @@ namespace TimeTracker.Api.Areas.Identity.Pages.Account
             if (!ModelState.IsValid)
                 return Page();
 
-            // User lookup (we need roles + 2FA state)
-            var user = await _userManager.FindByEmailAsync(Input.Email);
+            var loginIdentifier = (Input.Email ?? string.Empty).Trim();
+            var user = await ResolveUserByLoginIdentifierAsync(loginIdentifier);
+            var signInUserName = user?.UserName ?? loginIdentifier;
 
-            // Try sign-in first (keeps lockout/2fa behaviors consistent)
+            var policy = await _securityPolicyStore.GetAsync();
+
+            if (user != null)
+            {
+                if (!user.RegistrationApproved)
+                {
+                    await _audit.WriteAsync(
+                        eventType: "auth.login.pending_registration_approval",
+                        result: "fail",
+                        userId: user.Id,
+                        userEmail: user.Email);
+
+                    ModelState.AddModelError(string.Empty, "A regisztráció még HR jóváhagyásra vár. Belépés csak jóváhagyás után lehetséges.");
+                    return Page();
+                }
+
+                if (!user.EmploymentActive)
+                {
+                    await _audit.WriteAsync(
+                        eventType: "auth.login.inactive_profile",
+                        result: "fail",
+                        userId: user.Id,
+                        userEmail: user.Email);
+
+                    ModelState.AddModelError(string.Empty, "A fiók inaktív státuszú. Fordulj a HR osztályhoz.");
+                    return Page();
+                }
+
+                if (!user.LockoutEnabled)
+                    await _userManager.SetLockoutEnabledAsync(user, true);
+
+                if (await _userManager.IsLockedOutAsync(user))
+                {
+                    await _audit.WriteAsync(
+                        eventType: "auth.login.locked_out",
+                        result: "fail",
+                        userId: user.Id,
+                        userEmail: user.Email);
+
+                    ModelState.AddModelError(string.Empty, "A fiók zárolva van. Kérj jelszó-visszaállítást vagy fordulj adminhoz.");
+                    return Page();
+                }
+            }
+
+            if (user is not null)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var isPrivileged = roles.Any(r =>
+                    string.Equals(r, Roles.Admin, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(r, Roles.HR, StringComparison.OrdinalIgnoreCase));
+
+                if (isPrivileged && !user.TwoFactorEnabled)
+                {
+                    await _audit.WriteAsync(
+                        eventType: "auth.login.requires_2fa_enrollment",
+                        result: "fail",
+                        userId: user.Id,
+                        userEmail: user.Email,
+                        data: new { roles });
+
+                    ModelState.AddModelError(string.Empty, "HR/Admin belépéshez kötelező a 2FA. Kérd egy admin segítségét a 2FA beállításhoz.");
+                    return Page();
+                }
+            }
+
             var result = await _signInManager.PasswordSignInAsync(
-                Input.Email,
+                signInUserName,
                 Input.Password,
                 Input.RememberMe,
                 lockoutOnFailure: false);
 
+            if (user?.TwoFactorEnabled == true)
+            {
+                // Ensure next login consistently asks for TOTP on this browser.
+                await _signInManager.ForgetTwoFactorClientAsync();
+            }
+
             if (result.Succeeded)
             {
+                if (user is null)
+                    user = await ResolveUserByLoginIdentifierAsync(signInUserName);
+
                 var userId = user?.Id;
-                var email = user?.Email ?? Input.Email;
-
-                // HR/Admin 2FA enforcement
-                if (user != null)
-                {
-                    var roles = await _userManager.GetRolesAsync(user);
-                    var isPrivileged = roles.Contains(Roles.Admin) || roles.Contains(Roles.HR);
-
-                    if (isPrivileged && !user.TwoFactorEnabled)
-                    {
-                        // Audit + force redirect to 2FA setup
-                        await _audit.WriteAsync(
-                            eventType: "auth.login.forced_2fa_setup",
-                            result: "success",
-                            userId: user.Id,
-                            userEmail: user.Email,
-                            data: new { roles });
-
-                        // IMPORTANT: redirect to Identity Manage page
-                        return RedirectToPage("/Account/Manage/EnableAuthenticator", new { area = "Identity" });
-                    }
-                }
+                var email = user?.Email ?? loginIdentifier;
 
                 _logger.LogInformation("User logged in.");
 
@@ -160,6 +214,9 @@ namespace TimeTracker.Api.Areas.Identity.Pages.Account
                     result: "success",
                     userId: userId,
                     userEmail: email);
+
+                if (user != null)
+                    await _userManager.ResetAccessFailedCountAsync(user);
 
                 return LocalRedirect(returnUrl);
             }
@@ -192,18 +249,52 @@ namespace TimeTracker.Api.Areas.Identity.Pages.Account
                         userEmail: user.Email);
                 }
 
-                return RedirectToPage("./Lockout");
+                ModelState.AddModelError(string.Empty, "A fiók zárolva van. Kérj jelszó-visszaállítást vagy fordulj adminhoz.");
+                return Page();
             }
 
             // Fail
+            if (user != null)
+            {
+                await _userManager.AccessFailedAsync(user);
+                var failedCount = await _userManager.GetAccessFailedCountAsync(user);
+
+                if (failedCount >= policy.MaxFailedLoginAttempts)
+                {
+                    await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddYears(100));
+
+                    await _audit.WriteAsync(
+                        eventType: "auth.login.locked_out",
+                        result: "fail",
+                        userId: user.Id,
+                        userEmail: user.Email,
+                        data: new { failedCount, threshold = policy.MaxFailedLoginAttempts });
+
+                    ModelState.AddModelError(string.Empty, "Túl sok sikertelen próbálkozás miatt a fiók zárolva lett.");
+                    return Page();
+                }
+            }
+
             await _audit.WriteAsync(
                 eventType: "auth.login.fail",
                 result: "fail",
                 userId: user?.Id,
-                userEmail: user?.Email ?? Input.Email);
+                userEmail: user?.Email ?? loginIdentifier);
 
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return Page();
+        }
+
+        private async Task<ApplicationUser?> ResolveUserByLoginIdentifierAsync(string identifier)
+        {
+            if (string.IsNullOrWhiteSpace(identifier))
+                return null;
+
+            var byEmail = await _userManager.FindByEmailAsync(identifier);
+            if (byEmail is not null)
+                return byEmail;
+
+            return await _userManager.FindByNameAsync(identifier);
         }
     }
 }

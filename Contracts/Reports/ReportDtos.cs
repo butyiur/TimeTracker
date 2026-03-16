@@ -4,6 +4,8 @@ public sealed record TimeEntryReportRow(
     int Id,
     int ProjectId,
     string ProjectName,
+    int? TaskId,
+    string? TaskName,
     string UserId,
     string UserEmail,
     DateTime StartUtc,
@@ -14,6 +16,8 @@ public sealed record TimeEntryReportRow(
 public sealed record TimeEntrySummaryRow(
     int ProjectId,
     string ProjectName,
+    int? TaskId,
+    string? TaskName,
     string UserId,
     string UserEmail,
     int TotalMinutes

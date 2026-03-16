@@ -2,82 +2,205 @@
 @model LoginModel
 
 @{
-    ViewData["Title"] = "Log in";
+    Layout = null;
+    ViewData["Title"] = "Bejelentkezés";
 }
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TimeTracker</title>
+</head>
+<body>
+<style>
+    .auth-page {
+        min-height: 100vh;
+        padding: 22px;
+        background:
+            radial-gradient(1200px 520px at 10% -10%, #9e8cff 0%, rgba(158, 140, 255, 0) 58%),
+            radial-gradient(1000px 460px at 100% 120%, #6f5cff 0%, rgba(111, 92, 255, 0) 60%),
+            linear-gradient(145deg, #efeefe 0%, #e3e8ff 48%, #d9def8 100%);
+        display: grid;
+        place-items: center;
+    }
+    .auth-shell {
+        width: min(1040px, 100%);
+        display: grid;
+        grid-template-columns: 1.05fr .95fr;
+        border-radius: 22px;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #dadff2;
+        box-shadow: 0 24px 52px rgba(34, 24, 86, .18);
+    }
+    .hero {
+        position: relative;
+        min-height: 560px;
+        padding: 26px;
+        display: grid;
+        align-content: space-between;
+        color: #f9f8ff;
+        background:
+            linear-gradient(165deg, rgba(28, 14, 70, .68), rgba(53, 20, 118, .54)),
+            url('/auth/blob-bg.svg');
+        background-size: cover;
+        background-position: center;
+    }
+    .hero:before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(170deg, rgba(20, 10, 57, .34), rgba(20, 10, 57, .7));
+        backdrop-filter: blur(1.8px);
+        pointer-events: none;
+    }
+    .hero > * { position: relative; z-index: 1; }
+    .brand { font-size: 1.45rem; font-weight: 800; letter-spacing: .08em; }
+    .hero-title { font-size: 2rem; line-height: 1.1; max-width: 360px; margin: 0; }
+    .hero-sub { opacity: .9; max-width: 340px; }
+    .panel { padding: 38px 36px; display: grid; align-content: center; gap: 12px; background: linear-gradient(180deg, #fff, #f9f9ff); }
+    .panel h1 { margin: 0; font-size: 2rem; color: #211a4b; text-align: center; }
+    .muted { color: #675f88; margin-bottom: 6px; }
+    .text-danger,
+    .field-validation-error,
+    .validation-summary-errors,
+    .validation-summary-errors ul,
+    .validation-summary-errors li,
+    [data-valmsg-for],
+    [data-valmsg-summary="true"] {
+        color: #ff4d6d !important;
+    }
+    [data-valmsg-for],
+    [data-valmsg-summary="true"] {
+        font-weight: 700;
+    }
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 20px;
+        font-weight: 700;
+    }
+    .input-validation-error {
+        border-color: #ff4d6d !important;
+        box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.16);
+    }
+    .field { display: grid; gap: 7px; }
+    .field label { color: #271f5a; font-weight: 600; }
+    .field input { padding: 11px 12px; border: 1px solid #d7dbef; border-radius: 12px; width: 100%; }
+    .password-wrap { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .toggle {
+        border: 1px solid #d7dbef;
+        border-radius: 12px;
+        background: #fff;
+        width: 46px;
+        display: grid;
+        place-items: center;
+        color: #271f5a;
+        cursor: pointer;
+    }
+    .toggle svg { width: 20px; height: 20px; }
+    .remember { display: flex; align-items: center; gap: 8px; color: #271f5a; }
+    .btn-main {
+        width: 100%;
+        border: 1px solid #5d4ad2;
+        background: linear-gradient(135deg, #6b58df, #4f3ab9);
+        color: #fff;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-weight: 700;
+    }
+    .link-row { display: flex; gap: 16px; }
+    .link-btn {
+        flex: 1 1 0;
+        border: 1px solid #d7dbef;
+        border-radius: 12px;
+        padding: 9px 13px;
+        text-decoration: none;
+        color: #271f5a;
+        font-weight: 600;
+        background: #fff;
+        text-align: center;
+    }
+    .provider-list { display: flex; gap: 8px; flex-wrap: wrap; }
+    .provider-btn {
+        border: 1px solid #d7dbef;
+        border-radius: 12px;
+        padding: 10px 14px;
+        background: #fff;
+        color: #271f5a;
+        font-weight: 600;
+    }
+    @@media (max-width: 900px) {
+        .auth-page { padding: 14px; }
+        .auth-shell { grid-template-columns: 1fr; }
+        .hero { min-height: 220px; }
+        .hero-title { font-size: 1.5rem; }
+        .panel { padding: 24px 18px; }
+        .link-row { flex-direction: column; }
+    }
+</style>
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" method="post">
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+<div class="auth-page">
+    <section class="auth-shell">
+        <aside class="hero">
+            <div class="brand">TIMETRACKER</div>
+            <div>
+                <p class="hero-title">Biztonságos munkaidő-kezelés, vezetői rálátással</p>
+                <p class="hero-sub">Központi beléptetés, auditálható jogosultságkezelés és döntéstámogató riportok egy egységes felületen.</p>
+            </div>
+        </aside>
+
+        <div class="panel">
+            <h1 style="text-align:center;">Bejelentkezés</h1>
+            <div class="muted">Add meg a felhasználónevedet vagy e-mail címedet, és lépj be a rendszerbe.</div>
+
+            <form id="account" method="post" style="display:grid; gap:10px;">
+                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert" style="color:#ff4d6d;font-weight:700;"></div>
+
+                <div class="field">
+                    <label asp-for="Input.Email">Felhasználónév vagy e-mail</label>
+                    <input asp-for="Input.Email" autocomplete="username" aria-required="true" placeholder="pelda@email.com" />
+                    <span asp-validation-for="Input.Email" class="text-danger" style="color:#ff4d6d;font-weight:700;"></span>
                 </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
-                </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
-            </form>
-        </section>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
+
+                <div class="field">
+                    <label asp-for="Input.Password">Jelszó</label>
+                    <div class="password-wrap">
+                        <input id="identity-password" asp-for="Input.Password" type="password" autocomplete="current-password" aria-required="true" placeholder="Jelszó" />
+                        <button class="toggle" type="button" aria-label="Jelszó megjelenítése" onclick="toggleIdentityPassword()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M2 12s3.8-6 10-6 10 6 10 6-3.8 6-10 6-10-6-10-6z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
                     </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
-                        </div>
-                    </form>
-                }
-            }
-        </section>
-    </div>
+                    <span asp-validation-for="Input.Password" class="text-danger" style="color:#ff4d6d;font-weight:700;"></span>
+                </div>
+
+                <label class="remember" for="Input_RememberMe">
+                    <input asp-for="Input.RememberMe" />
+                    Emlékezz rám
+                </label>
+
+                <button id="login-submit" type="submit" class="btn-main">Belépés</button>
+            </form>
+
+            <div class="link-row">
+                <a class="link-btn" href="http://localhost:4200/register">Regisztráció</a>
+                <a class="link-btn" href="http://localhost:4200/forgot-password">Elfelejtett jelszó</a>
+            </div>
+
+        </div>
+    </section>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<script>
+    function toggleIdentityPassword() {
+        const input = document.getElementById('identity-password');
+        if (!input) return;
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+</script>
+</body>
+</html>
+

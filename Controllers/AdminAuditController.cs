@@ -1,19 +1,28 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OpenIddict.Validation.AspNetCore;
 using TimeTracker.Api.Auth;
 using TimeTracker.Api.Data;
 using TimeTracker.Api.Contracts.Audit;
+using TimeTracker.Api.Domain.Identity;
 
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/admin/audit")]
-[Authorize(Policy = Policies.AdminOnly)]
+[Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
 public class AdminAuditController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
-    public AdminAuditController(ApplicationDbContext db) => _db = db;
+    private readonly UserManager<ApplicationUser> _userManager;
+
+    public AdminAuditController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+    {
+        _db = db;
+        _userManager = userManager;
+    }
 
     [HttpGet]
     public async Task<IActionResult> Get(
@@ -25,6 +34,8 @@ public class AdminAuditController : ControllerBase
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 50)
     {
+        if (!await IsAdminAsync()) return Forbid();
+
         if (page < 1) page = 1;
         if (pageSize is < 1 or > 200) pageSize = 50;
 
@@ -44,7 +55,24 @@ public class AdminAuditController : ControllerBase
             query = query.Where(x => x.TimestampUtc <= toUtc.Value);
 
         if (!string.IsNullOrWhiteSpace(eventType))
-            query = query.Where(x => x.EventType == eventType);
+        {
+            var term = eventType.Trim();
+
+            if (term.EndsWith("*", StringComparison.Ordinal))
+            {
+                var prefix = term[..^1];
+                if (!string.IsNullOrWhiteSpace(prefix))
+                    query = query.Where(x => x.EventType.StartsWith(prefix));
+            }
+            else if (term.EndsWith(".", StringComparison.Ordinal))
+            {
+                query = query.Where(x => x.EventType.StartsWith(term));
+            }
+            else
+            {
+                query = query.Where(x => x.EventType == term);
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(userId))
             query = query.Where(x => x.UserId == userId);
@@ -79,5 +107,14 @@ public class AdminAuditController : ControllerBase
             TotalCount = totalCount,
             Items = items
         });
+    }
+
+    private async Task<bool> IsAdminAsync()
+    {
+        var userId = User.GetUserIdOrThrow();
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is null) return false;
+
+        return await _userManager.IsInRoleAsync(user, Roles.Admin);
     }
 }

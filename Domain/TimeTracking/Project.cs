@@ -8,9 +8,16 @@ public class Project
 
     public string Name { get; set; } = null!;
 
-    // Ki hozta létre a projektet (tulaj/creator)
+    // Inactive projects stay in history, but cannot be used for new assignments/time logging.
+    public bool IsActive { get; set; } = true;
+
+    // Optional high-level project estimate (stored in hours).
+    public int? PlannedHours { get; set; }
+
+    // Ki hozta lï¿½tre a projektet (tulaj/creator)
     public string CreatedByUserId { get; set; } = null!;
     public ApplicationUser CreatedByUser { get; set; } = null!;
 
     public ICollection<ProjectAssignment> Assignments { get; set; } = new List<ProjectAssignment>();
+    public ICollection<ProjectTask> Tasks { get; set; } = new List<ProjectTask>();
 }

@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using OpenIddict.Validation.AspNetCore;
+using TimeTracker.Api.Auth;
 using TimeTracker.Api.Domain.Identity;
 
 namespace TimeTracker.Api.Controllers;
 
 [ApiController]
 [Route("api/account/2fa")]
-[Authorize(AuthenticationSchemes = "Identity.Application")]
+[Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
 public class AccountSecurityController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
@@ -18,10 +20,10 @@ public class AccountSecurityController : ControllerBase
     [HttpPost("totp/setup")]
     public async Task<IActionResult> SetupTotp()
     {
-        var user = await _userManager.GetUserAsync(User);
+        var user = await ResolveCurrentUserAsync();
         if (user is null) return Unauthorized();
 
-        // új kulcs (ha újra setupol)
+        // ï¿½j kulcs (ha ï¿½jra setupol)
         await _userManager.ResetAuthenticatorKeyAsync(user);
 
         var key = await _userManager.GetAuthenticatorKeyAsync(user);
@@ -30,7 +32,7 @@ public class AccountSecurityController : ControllerBase
 
         var email = user.Email ?? user.UserName ?? user.Id;
 
-        // otpauth URI: ezt fogja az Angular QR-kóddá alakítani
+        // otpauth URI: ezt fogja az Angular QR-kï¿½ddï¿½ alakï¿½tani
         var issuer = "TimeTracker";
         var uri = BuildOtpAuthUri(issuer, email, key);
 
@@ -47,7 +49,7 @@ public class AccountSecurityController : ControllerBase
         if (req is null || string.IsNullOrWhiteSpace(req.Code))
             return BadRequest(new { error = "code_required" });
 
-        var user = await _userManager.GetUserAsync(User);
+        var user = await ResolveCurrentUserAsync();
         if (user is null) return Unauthorized();
 
         var code = req.Code.Replace(" ", "").Replace("-", "");
@@ -62,7 +64,7 @@ public class AccountSecurityController : ControllerBase
 
         await _userManager.SetTwoFactorEnabledAsync(user, true);
 
-        // recovery codes – ezt most adjuk vissza egyszer
+        // recovery codes ï¿½ ezt most adjuk vissza egyszer
         var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, number: 10);
 
         return Ok(new
@@ -75,8 +77,15 @@ public class AccountSecurityController : ControllerBase
     [HttpPost("totp/disable")]
     public async Task<IActionResult> DisableTotp()
     {
-        var user = await _userManager.GetUserAsync(User);
+        var user = await ResolveCurrentUserAsync();
         if (user is null) return Unauthorized();
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var isPrivileged = roles.Any(r =>
+            string.Equals(r, Roles.HR, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(r, Roles.Admin, StringComparison.OrdinalIgnoreCase));
+        if (isPrivileged)
+            return BadRequest(new { error = "2fa_required_for_privileged_roles" });
 
         await _userManager.SetTwoFactorEnabledAsync(user, false);
         await _userManager.ResetAuthenticatorKeyAsync(user);
@@ -87,7 +96,7 @@ public class AccountSecurityController : ControllerBase
     [HttpPost("recoverycodes/regenerate")]
     public async Task<IActionResult> RegenerateRecoveryCodes()
     {
-        var user = await _userManager.GetUserAsync(User);
+        var user = await ResolveCurrentUserAsync();
         if (user is null) return Unauthorized();
 
         var is2faEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
@@ -106,6 +115,12 @@ public class AccountSecurityController : ControllerBase
         var encEmail = Uri.EscapeDataString(email);
 
         return $"otpauth://totp/{encIssuer}:{encEmail}?secret={secret}&issuer={encIssuer}&digits=6";
+    }
+
+    private async Task<ApplicationUser?> ResolveCurrentUserAsync()
+    {
+        var userId = User.GetUserIdOrThrow();
+        return await _userManager.FindByIdAsync(userId);
     }
 }
 

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OpenIddict.Validation.AspNetCore;
 
 namespace TimeTracker.Api.Controllers;
 
@@ -8,7 +9,7 @@ namespace TimeTracker.Api.Controllers;
 public class AuthDebugController : ControllerBase
 {
     [HttpGet("me")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
     public IActionResult Me() => Ok(new
     {
         name = User.Identity?.Name,

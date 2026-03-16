@@ -4,5 +4,8 @@ namespace TimeTracker.Api.Domain.Identity;
 
 public class ApplicationUser : IdentityUser
 {
-    // késõbb: FullName, Department, stb.
+    // kï¿½sï¿½bb: FullName, Department, stb.
+    public bool EmploymentActive { get; set; } = true;
+    public bool RegistrationApproved { get; set; } = true;
+    public DateTimeOffset? RegistrationRequestedAtUtc { get; set; }
 }

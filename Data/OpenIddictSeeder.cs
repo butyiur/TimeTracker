@@ -27,7 +27,7 @@ public static class OpenIddictSeeder
             postLogoutRedirectUri: "https://localhost:7037/swagger/"
         );
 
-        // Angular kliens (hosszú táv) - Authorization Code + PKCE
+        // Angular kliens (hosszï¿½ tï¿½v) - Authorization Code + PKCE
         await EnsureSpaClient(
             appManager,
             clientId: "timetracker-angular-spa",
@@ -57,10 +57,7 @@ public static class OpenIddictSeeder
     string redirectUri,
     string postLogoutRedirectUri)
     {
-        if (await appManager.FindByClientIdAsync(clientId) is not null)
-            return;
-
-        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
+        var descriptor = new OpenIddictApplicationDescriptor
         {
             ClientId = clientId,
             DisplayName = clientId,
@@ -79,8 +76,8 @@ public static class OpenIddictSeeder
             OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
             OpenIddictConstants.Permissions.ResponseTypes.Code,
 
-            // OIDC scope-ok: nálad a verzióban NINCS Permissions.Scopes.OpenId stb,
-            // ezért prefix-szel add meg:
+            // OIDC scope-ok: nï¿½lad a verziï¿½ban NINCS Permissions.Scopes.OpenId stb,
+            // ezï¿½rt prefix-szel add meg:
             OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
             OpenIddictConstants.Permissions.Prefixes.Scope + "profile",
             OpenIddictConstants.Permissions.Prefixes.Scope + "email",
@@ -93,10 +90,19 @@ public static class OpenIddictSeeder
         {
             OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange
         }
-        });
+        };
+
+        var existing = await appManager.FindByClientIdAsync(clientId);
+        if (existing is null)
+        {
+            await appManager.CreateAsync(descriptor);
+            return;
+        }
+
+        await appManager.UpdateAsync(existing, descriptor);
     }
 
-    // (ha késõbb kell gép-gép integráció)
+    // (ha kï¿½sï¿½bb kell gï¿½p-gï¿½p integrï¿½ciï¿½)
     private static async Task EnsureClientCredentialsClient(
         IOpenIddictApplicationManager appManager,
         string clientId,

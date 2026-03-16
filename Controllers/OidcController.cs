@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
+using TimeTracker.Api.Auth;
 using TimeTracker.Api.Domain.Identity;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -16,9 +17,13 @@ namespace TimeTracker.Api.Controllers;
 public class AuthorizationController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
 
-    public AuthorizationController(UserManager<ApplicationUser> userManager)
-        => _userManager = userManager;
+    public AuthorizationController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
+    {
+        _userManager = userManager;
+        _signInManager = signInManager;
+    }
 
     [HttpGet("~/connect/authorize")]
     public async Task<IActionResult> Authorize()
@@ -40,7 +45,52 @@ public class AuthorizationController : ControllerBase
         var user = await _userManager.GetUserAsync(cookieAuth.Principal);
         if (user is null) return Forbid();
 
-        var principal = await _userManager.CreatePrincipalAsync(user);
+        if (!user.RegistrationApproved)
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return Forbid();
+        }
+
+        if (!user.EmploymentActive)
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return Forbid();
+        }
+
+        if (await _userManager.IsLockedOutAsync(user))
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return Forbid();
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var isPrivileged = roles.Any(r =>
+            string.Equals(r, Roles.Admin, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(r, Roles.HR, StringComparison.OrdinalIgnoreCase));
+        if (isPrivileged && !user.TwoFactorEnabled)
+        {
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return Forbid();
+        }
+
+        if (isPrivileged)
+        {
+            var authenticatedWithMfa = cookieAuth.Principal.Claims.Any(x =>
+                string.Equals(x.Type, "amr", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(x.Value, "mfa", StringComparison.OrdinalIgnoreCase));
+
+            var rememberedForTwoFactor = await _signInManager.IsTwoFactorClientRememberedAsync(user);
+            if (!authenticatedWithMfa && !rememberedForTwoFactor)
+            {
+                await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                return Challenge(new AuthenticationProperties
+                {
+                    RedirectUri = Request.PathBase + Request.Path + Request.QueryString.Value
+                }, IdentityConstants.ApplicationScheme);
+            }
+        }
+
+        var principal = await _userManager.CreatePrincipalAsync(user, isPrivileged);
 
         principal.SetScopes(request.GetScopes());
         principal.SetResources("api");
@@ -53,7 +103,8 @@ internal static class UserManagerExtensions
 {
     public static async Task<ClaimsPrincipal> CreatePrincipalAsync(
         this UserManager<ApplicationUser> userManager,
-        ApplicationUser user)
+        ApplicationUser user,
+        bool isPrivileged)
     {
         var identity = new ClaimsIdentity(
             authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
@@ -70,6 +121,12 @@ internal static class UserManagerExtensions
         foreach (var role in roles)
         {
             identity.AddClaim(new Claim(Claims.Role, role)
+                .SetDestinations(Destinations.AccessToken));
+        }
+
+        if (isPrivileged)
+        {
+            identity.AddClaim(new Claim("tt_mfa", "1")
                 .SetDestinations(Destinations.AccessToken));
         }
 
