@@ -1,0 +1,231 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+	--tt-text: #1f1a4b;
+	--tt-muted: #665d8a;
+	--tt-surface: #ffffff;
+	--tt-border: #cfd6ef;
+	--tt-primary-a: #9a8cff;
+	--tt-primary-b: #7469dd;
+	--tt-primary-shadow: rgba(78, 56, 184, 0.2);
+	--tt-success-a: #2fb36c;
+	--tt-success-b: #1f8a52;
+	--tt-success-shadow: rgba(25, 116, 70, 0.24);
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	font-size: 16px;
+}
+
+body {
+	font-family: Manrope, Segoe UI, sans-serif;
+	font-size: 1rem;
+	line-height: 1.45;
+	letter-spacing: 0.01em;
+	background: #f2f2f8;
+	color: var(--tt-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: Manrope, Segoe UI, sans-serif;
+	letter-spacing: 0;
+	line-height: 1.2;
+	margin-block: 0 0.6em;
+}
+
+h1 { font-size: clamp(1.9rem, 2.6vw, 2.55rem); font-weight: 800; }
+h2 { font-size: clamp(1.5rem, 2vw, 1.9rem); font-weight: 800; }
+h3 { font-size: clamp(1.2rem, 1.4vw, 1.4rem); font-weight: 700; }
+
+button.btn,
+a.btn,
+.btn {
+	font-family: inherit;
+	font-size: 0.95rem;
+	font-weight: 700;
+	border-radius: 12px;
+	border: 1px solid rgba(156, 143, 242, 0.72);
+	background: linear-gradient(135deg, var(--tt-primary-a), var(--tt-primary-b));
+	color: #fff;
+	padding: 8px 13px;
+	min-height: 40px;
+	transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, border-color .16s ease;
+	box-shadow: 0 8px 18px var(--tt-primary-shadow);
+}
+
+button.btn:hover,
+a.btn:hover,
+.btn:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 11px 22px rgba(72, 52, 170, 0.26);
+}
+
+button.btn:disabled,
+.btn:disabled {
+	opacity: .6;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: none;
+}
+
+button.btn.primary,
+a.btn.primary,
+.btn.primary {
+	border-color: rgba(155, 142, 242, 0.72);
+	background: linear-gradient(135deg, var(--tt-primary-a), var(--tt-primary-b));
+	color: #fff;
+	box-shadow: 0 12px 26px var(--tt-primary-shadow);
+}
+
+a.btn.secondary,
+.btn.secondary,
+button.btn.secondary {
+	background: #ffffff;
+	color: var(--tt-text);
+	border: 1px solid var(--tt-border);
+	box-shadow: none;
+}
+
+.btn.btn-danger,
+button.btn.btn-danger,
+a.btn.btn-danger {
+	background: linear-gradient(135deg, #f16d8a, #d43e66);
+	border-color: rgba(203, 53, 92, 0.7);
+	color: #fff;
+}
+
+.btn.btn-success,
+button.btn.btn-success,
+a.btn.btn-success {
+	background: linear-gradient(135deg, var(--tt-success-a), var(--tt-success-b));
+	border-color: rgba(31, 138, 82, 0.72);
+	color: #fff;
+	box-shadow: 0 10px 22px var(--tt-success-shadow);
+}
+
+.btn.btn-sm,
+button.btn.btn-sm,
+a.btn.btn-sm {
+	font-size: 0.88rem;
+	padding: 6px 11px;
+	border-radius: 11px;
+}
+
+input[type='file']::file-selector-button {
+	font-family: inherit;
+	font-size: 0.92rem;
+	font-weight: 700;
+	padding: 6px 10px;
+	margin-right: 10px;
+	border-radius: 10px;
+	border: 1px solid #ccd3ee;
+	background: linear-gradient(180deg, #ffffff, #f7f8ff);
+	color: var(--tt-text);
+	cursor: pointer;
+}
+
+/* Shell-wide contrast tuning for internal pages (calendar, settings, reports, etc.) */
+tt-app-shell .content .wrap {
+	max-width: none !important;
+	width: 100% !important;
+}
+
+tt-app-shell .content .card {
+	background: linear-gradient(180deg, #ffffff, #f4f7ff) !important;
+	border: 1px solid #c4cdec !important;
+	box-shadow: 0 12px 28px rgba(28, 20, 78, 0.16) !important;
+}
+
+tt-app-shell .content h1,
+tt-app-shell .content h2,
+tt-app-shell .content h3,
+tt-app-shell .content h4 {
+	color: #1f184e !important;
+}
+
+tt-app-shell .content .muted {
+	opacity: 1 !important;
+	color: #524a78 !important;
+}
+
+tt-app-shell .content input,
+tt-app-shell .content select,
+tt-app-shell .content textarea {
+	background: #ffffff !important;
+	color: #231d52 !important;
+	border-color: #b7c3ea !important;
+}
+
+tt-app-shell .content input:focus,
+tt-app-shell .content select:focus,
+tt-app-shell .content textarea:focus {
+	outline: none;
+	border-color: #6f5adf !important;
+	box-shadow: 0 0 0 3px rgba(111, 90, 223, 0.16);
+}
+
+/* Force consistent action buttons in Admin/HR pages where local styles may conflict */
+tt-app-shell .content button.btn:not(.secondary),
+tt-app-shell .content a.btn:not(.secondary) {
+	background: linear-gradient(135deg, var(--tt-primary-a), var(--tt-primary-b)) !important;
+	border: 1px solid rgba(156, 143, 242, 0.72) !important;
+	color: #ffffff !important;
+	border-radius: 12px !important;
+	font-weight: 700;
+	box-shadow: 0 10px 24px rgba(58, 42, 142, 0.22) !important;
+}
+
+tt-app-shell .content button.btn.btn-danger,
+tt-app-shell .content a.btn.btn-danger {
+	background: linear-gradient(135deg, #f06d8b, #d33d66) !important;
+	border-color: rgba(203, 53, 92, 0.7) !important;
+	color: #ffffff !important;
+}
+
+tt-app-shell .content button.btn.btn-success,
+tt-app-shell .content a.btn.btn-success {
+	background: linear-gradient(135deg, var(--tt-success-a), var(--tt-success-b)) !important;
+	border-color: rgba(31, 138, 82, 0.72) !important;
+	color: #ffffff !important;
+	box-shadow: 0 10px 22px var(--tt-success-shadow) !important;
+}
+
+tt-app-shell .content button.btn:disabled,
+tt-app-shell .content a.btn:disabled {
+	opacity: .6;
+	cursor: not-allowed;
+	box-shadow: none !important;
+}
+
+html.tt-dark body {
+	background: #121212;
+	color: #e8e8e8;
+}
+
+html.tt-dark .card {
+	background: #1c1c1c !important;
+	border-color: #2f2f2f !important;
+}
+
+html.tt-dark input,
+html.tt-dark button,
+html.tt-dark a {
+	color: #e8e8e8;
+}
