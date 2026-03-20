@@ -370,15 +370,12 @@ public class HrController : ControllerBase
         if (hasOverlap)
             return BadRequest(new { error = "overlap", details = new[] { "A kérés időintervalluma már átfed meglévő bejegyzéssel." } });
 
-        if (req.TaskId.HasValue)
-        {
-            var validTask = await _db.ProjectTasks
-                .AsNoTracking()
-                .AnyAsync(x => x.Id == req.TaskId.Value && x.ProjectId == req.ProjectId);
+        var validTask = await _db.ProjectTasks
+            .AsNoTracking()
+            .AnyAsync(x => x.Id == req.TaskId && x.ProjectId == req.ProjectId);
 
-            if (!validTask)
-                return BadRequest(new { error = "task_not_found", details = new[] { "A kérelemhez tartozó feladat már nem érvényes ehhez a projekthez." } });
-        }
+        if (!validTask)
+            return BadRequest(new { error = "task_not_found", details = new[] { "A kérelemhez tartozó feladat már nem érvényes ehhez a projekthez." } });
 
         var entry = new TimeEntry
         {
@@ -431,7 +428,7 @@ public record HrManualTimeRequestDto(
     string? RequesterEmail,
     int ProjectId,
     string ProjectName,
-    int? TaskId,
+    int TaskId,
     string? TaskName,
     DateTime StartUtc,
     DateTime EndUtc,

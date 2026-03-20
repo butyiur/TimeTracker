@@ -13,7 +13,7 @@ public class ManualTimeEntryRequest
 
     public string RequesterUserId { get; set; } = null!;
     public int ProjectId { get; set; }
-    public int? TaskId { get; set; }
+    public int TaskId { get; set; }
     public ProjectTask? Task { get; set; }
 
     public DateTime StartUtc { get; set; }

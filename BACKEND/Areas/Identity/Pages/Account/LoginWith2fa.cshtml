@@ -99,12 +99,13 @@
     .link-row { display: flex; gap: 16px; }
     .link-btn {
         flex: 1 1 0;
-        display: grid;
-        place-items: center;
-        height: 68px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
         border: 1px solid #d7dbef;
         border-radius: 12px;
-        padding: 0 13px;
+        padding: 9px 13px;
         text-decoration: none;
         color: #271f5a;
         font-weight: 600;
@@ -120,8 +121,7 @@
         display: block;
     }
     .link-btn-single > span {
-        position: relative;
-        top: 3px;
+        position: static;
     }
     @@media (max-width: 900px) {
         .auth-page { padding: 14px; }

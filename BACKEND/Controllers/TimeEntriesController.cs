@@ -137,6 +137,9 @@ public class TimeEntriesController : ControllerBase
     {
         var userId = User.GetUserIdOrThrow();
 
+        if (req.TaskId <= 0)
+            return BadRequest(new { error = "task_required", details = new[] { "Feladat kiválasztása kötelező." } });
+
         if (req.EndUtc <= req.StartUtc)
             return BadRequest(new { error = "invalid_interval", details = new[] { "A befejezés későbbi legyen, mint a kezdés." } });
 
@@ -199,13 +202,11 @@ public class TimeEntriesController : ControllerBase
             .Select(x => x.Name)
             .FirstAsync();
 
-        var taskName = request.TaskId is null
-            ? null
-            : await _db.ProjectTasks
-                .AsNoTracking()
-                .Where(x => x.Id == request.TaskId.Value)
-                .Select(x => x.Name)
-                .FirstOrDefaultAsync();
+        var taskName = await _db.ProjectTasks
+            .AsNoTracking()
+            .Where(x => x.Id == request.TaskId)
+            .Select(x => x.Name)
+            .FirstOrDefaultAsync();
 
         return Ok(new ManualTimeEntryRequestDto(
             request.Id,
@@ -550,7 +551,7 @@ public record StartTimeEntryRequest(int ProjectId, int? TaskId);
 
 public record CreateManualTimeEntryRequest(
     int ProjectId,
-    int? TaskId,
+    int TaskId,
     DateTime StartUtc,
     DateTime EndUtc,
     string? Description
@@ -562,7 +563,7 @@ public record ManualTimeEntryRequestDto(
     int Id,
     int ProjectId,
     string ProjectName,
-    int? TaskId,
+    int TaskId,
     string? TaskName,
     DateTime StartUtc,
     DateTime EndUtc,

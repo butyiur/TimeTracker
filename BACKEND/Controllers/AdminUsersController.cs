@@ -36,6 +36,7 @@ public class AdminUsersController : ControllerBase
     public async Task<ActionResult<AdminUserPagedResponse>> GetUsers(
         [FromQuery] string? q = null,
         [FromQuery] string? role = null,
+        [FromQuery] bool? employmentActive = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 25)
     {
@@ -62,6 +63,11 @@ public class AdminUsersController : ControllerBase
                         r => r.Id,
                         (ur, r) => new { ur.UserId, RoleName = r.Name })
                     .Any(x => x.UserId == u.Id && x.RoleName == filterRole));
+        }
+
+        if (employmentActive.HasValue)
+        {
+            query = query.Where(x => x.EmploymentActive == employmentActive.Value);
         }
 
         var totalItems = await query.CountAsync();
@@ -138,15 +144,15 @@ public class AdminUsersController : ControllerBase
             var lockoutActive = user.LockoutEnabled
                 && user.LockoutEnd.HasValue
                 && user.LockoutEnd.Value > now;
-            var employmentActive = user.EmploymentActive;
-            var lockoutReason = ResolveLockoutReason(employmentActive, lockoutActive, user.AccessFailedCount);
+            var isEmploymentActive = user.EmploymentActive;
+            var lockoutReason = ResolveLockoutReason(isEmploymentActive, lockoutActive, user.AccessFailedCount);
 
             list.Add(new AdminUserListItemDto(
                 user.Id,
                 user.Email,
                 user.UserName,
                 roles,
-                employmentActive,
+                isEmploymentActive,
                 lockoutActive,
                 user.LockoutEnd,
                 user.AccessFailedCount,

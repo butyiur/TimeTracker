@@ -285,7 +285,7 @@ namespace TimeTracker.Api.Areas.Identity.Pages.Account
             return Page();
         }
 
-        private async Task<ApplicationUser?> ResolveUserByLoginIdentifierAsync(string identifier)
+        private async Task<ApplicationUser> ResolveUserByLoginIdentifierAsync(string identifier)
         {
             if (string.IsNullOrWhiteSpace(identifier))
                 return null;

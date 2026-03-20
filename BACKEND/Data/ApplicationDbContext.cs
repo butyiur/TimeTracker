@@ -103,7 +103,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.HasOne(x => x.Task)
              .WithMany()
              .HasForeignKey(x => x.TaskId)
-             .OnDelete(DeleteBehavior.SetNull);
+             .OnDelete(DeleteBehavior.Restrict);
 
             b.Property(x => x.Description).HasMaxLength(1000);
             b.Property(x => x.ReviewerComment).HasMaxLength(500);
