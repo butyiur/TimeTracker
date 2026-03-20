@@ -65,6 +65,29 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
       }
       .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
       .field { display:grid; gap:6px; min-width:180px; }
+      .status-row { align-items:center; gap:12px; flex-wrap:wrap; }
+      .status-label { font-weight:700; color:#4f4680; }
+      .status-checkboxes {
+        display:flex;
+        gap:14px;
+        flex-wrap:wrap;
+        align-items:center;
+      }
+      .status-checkboxes label {
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        font-weight:600;
+        color:#2c2465;
+      }
+      .status-checkboxes input[type='checkbox'] {
+        width:18px;
+        height:18px;
+        padding:0;
+        border-radius:4px;
+        border:1px solid #bcc6eb;
+        accent-color:#6f5cff;
+      }
       input, select { padding:8px 10px; border:1px solid #bcc6eb; border-radius:12px; }
       .btn {
         padding:8px 13px;
@@ -235,6 +258,20 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
           </label>
         </div>
 
+        <div class="row status-row" style="margin-top:10px;">
+          <div class="status-label">Állapot</div>
+          <div class="status-checkboxes">
+            <label>
+              <input type="checkbox" [(ngModel)]="filters.showActive" (ngModelChange)="onShowActiveChange($event)" />
+              Csak aktív
+            </label>
+            <label>
+              <input type="checkbox" [(ngModel)]="filters.showInactive" (ngModelChange)="onShowInactiveChange($event)" />
+              Csak inaktív
+            </label>
+          </div>
+        </div>
+
         <div class="row" style="margin-top:10px;">
           <button class="btn" (click)="load()" [disabled]="busy">Szűrés</button>
           <button class="btn" (click)="resetFilters()" [disabled]="busy">Alaphelyzet</button>
@@ -393,6 +430,8 @@ export class AdminUsersPage {
   filters = {
     q: '',
     role: '',
+    showActive: false,
+    showInactive: false,
   };
 
   get dashboardKicker(): string {
@@ -460,6 +499,7 @@ export class AdminUsersPage {
           .list({
             q: this.filters.q.trim() || undefined,
             role: this.filters.role || undefined,
+            employmentActive: this.getEmploymentActiveFilter(),
             page: this.page,
             pageSize: this.pageSize,
           })
@@ -506,9 +546,28 @@ export class AdminUsersPage {
   }
 
   resetFilters(): void {
-    this.filters = { q: '', role: '' };
+    this.filters = { q: '', role: '', showActive: false, showInactive: false };
     this.page = 1;
     void this.load();
+  }
+
+  private getEmploymentActiveFilter(): boolean | undefined {
+    const { showActive, showInactive } = this.filters;
+    if (showActive && !showInactive) return true;
+    if (!showActive && showInactive) return false;
+    return undefined;
+  }
+
+  onShowActiveChange(checked: boolean): void {
+    if (checked) {
+      this.filters.showInactive = false;
+    }
+  }
+
+  onShowInactiveChange(checked: boolean): void {
+    if (checked) {
+      this.filters.showActive = false;
+    }
   }
 
   goToPage(page: number): void {

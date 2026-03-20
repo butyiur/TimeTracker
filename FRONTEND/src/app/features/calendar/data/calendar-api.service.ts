@@ -31,7 +31,7 @@ export type ProjectTaskDto = {
 
 export type ManualEntryRequest = {
   projectId: number;
-  taskId: number | null;
+  taskId: number;
   startUtc: string;
   endUtc: string;
   description: string | null;
@@ -41,7 +41,7 @@ export type ManualEntryRequestDto = {
   id: number;
   projectId: number;
   projectName: string;
-  taskId: number | null;
+  taskId: number;
   taskName: string | null;
   startUtc: string;
   endUtc: string;

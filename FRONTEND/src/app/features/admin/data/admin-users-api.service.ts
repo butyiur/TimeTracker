@@ -21,6 +21,7 @@ export type AdminUsersQuery = {
   role?: string;
   page?: number;
   pageSize?: number;
+  employmentActive?: boolean;
 };
 
 export type AdminUsersPagedDto = {
@@ -70,6 +71,9 @@ export class AdminUsersApiService {
 
     if (query.q?.trim()) params = params.set('q', query.q.trim());
     if (query.role?.trim()) params = params.set('role', query.role.trim());
+    if (typeof query.employmentActive === 'boolean') {
+      params = params.set('employmentActive', String(query.employmentActive));
+    }
     if (typeof query.page === 'number') params = params.set('page', String(query.page));
     if (typeof query.pageSize === 'number') params = params.set('pageSize', String(query.pageSize));
 

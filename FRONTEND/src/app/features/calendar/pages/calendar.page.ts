@@ -174,9 +174,9 @@ type CalendarEntry = TimeEntryDto;
             </label>
 
             <label class="field" *ngIf="manualForm.projectId">
-              <span>Feladat (opcionális)</span>
+              <span>Feladat</span>
               <select [(ngModel)]="manualForm.taskId">
-                <option [ngValue]="null">Általános / nincs feladat</option>
+                <option [ngValue]="null">Válassz feladatot...</option>
                 <option *ngFor="let item of taskOptionsFor(manualForm.projectId)" [ngValue]="item.id">{{ item.name }}</option>
               </select>
             </label>
@@ -482,6 +482,12 @@ export class CalendarPage implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.manualForm.taskId) {
+      this.error = 'Válassz feladatot.';
+      this.scheduleFeedbackClear();
+      return;
+    }
+
     if (this.manualForm.end <= this.manualForm.start) {
       this.error = 'A befejezés későbbi legyen, mint a kezdés.';
       this.scheduleFeedbackClear();
@@ -612,6 +618,7 @@ export class CalendarPage implements OnInit, OnDestroy {
       if (!this.manualForm.projectId && this.projects.length) {
         this.manualForm.projectId = this.projects[0].id;
         await this.ensureTasksLoaded(this.manualForm.projectId);
+        this.manualForm.taskId = this.taskOptionsFor(this.manualForm.projectId)[0]?.id ?? null;
       }
     } else {
       this.projects = [];
@@ -853,6 +860,7 @@ export class CalendarPage implements OnInit, OnDestroy {
     this.manualForm.taskId = null;
     if (this.manualForm.projectId) {
       await this.ensureTasksLoaded(this.manualForm.projectId);
+      this.manualForm.taskId = this.taskOptionsFor(this.manualForm.projectId)[0]?.id ?? null;
     }
   }
 
