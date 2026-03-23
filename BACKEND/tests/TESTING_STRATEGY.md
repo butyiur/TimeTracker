@@ -1,6 +1,6 @@
 # Testing Strategy
 
-Ez a mappa a TimeTracker backend tesztelési tervét és tesztprojektjeit tartalmazza.
+Ez a mappa a TimeTracker backend tesztelési tervét és a kapcsolódó tesztfájlokat tartalmazza.
 
 ## Tesztszintek
 
@@ -8,24 +8,32 @@ Ez a mappa a TimeTracker backend tesztelési tervét és tesztprojektjeit tartal
 - Cél: gyors visszajelzés üzleti szabályokra és policy logikára.
 - Fókusz:
   - jogosultsági policy-k (Employee/HR/Admin kombinációk),
-  - jelszó policy alapú validáció.
+  - dinamikus jelszó policy validáció.
 
 2. Integrációs tesztek
 - Cél: API végpontok és adatbázis viselkedésének ellenőrzése.
 - Fókusz:
   - auth és role alapú hozzáférés,
   - user státusz váltás (aktiválás/inaktiválás),
-  - regisztráció és jóváhagyás folyamat.
+  - regisztráció és HR jóváhagyás folyamat,
+  - 2FA setup/enable/disable/recovery endpointok.
 
 3. E2E tesztek
-- Cél: kritikus üzleti folyamatok végponttól végpontig ellenőrzése.
+- Cél: kritikus felhasználói útvonalak ellenőrzése böngészőből.
 - Fókusz:
-  - bejelentkezés és átirányítás szerepkör alapján,
-  - HR/Admin felhasználó-kezelési flow,
-  - időbejegyzés és jóváhagyás fő útvonal.
+  - login oldal renderelés és alap auth navigáció,
+  - nyilvános auth oldalak közti átjárás.
+
+4. Teljesítménytesztek
+- Cél: nyilvános auth API stabilitás és válaszidő ellenőrzése terhelés alatt.
+- Fókusz:
+  - `GET /api/auth/password-policy`,
+  - `POST /api/auth/resend-email-confirmation`,
+  - hibaarány és p95 válaszidő.
 
 ## Prioritás
 
 1. Unit + integrációs tesztek a backend jogosultsági és auth logikára.
 2. Integrációs tesztek a legkockázatosabb HR/Admin műveletekre.
-3. Kis számú (4-6) E2E regressziós forgatókönyv.
+3. Kis számú, stabil E2E regressziós forgatókönyv.
+4. K6 alapú teljesítmény smoke teszt az auth nyilvános végpontokra.
