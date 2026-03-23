@@ -25,7 +25,6 @@ export class AuthCallbackComponent implements OnInit {
         return;
       }
 
-      // ✅ itt töltjük be a user infót, ha már van token
       await this.authState.refreshMe();
 
       await this.router.navigateByUrl(target.startsWith('/') ? target : '/' + target);

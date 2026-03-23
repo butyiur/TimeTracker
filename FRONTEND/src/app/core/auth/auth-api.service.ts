@@ -7,6 +7,7 @@ export type MeDto = {
   userId: string;
   name: string;
   email?: string | null;
+  emailConfirmed?: boolean;
   phoneNumber?: string | null;
   roles: string[];
   photoUrl?: string | null;

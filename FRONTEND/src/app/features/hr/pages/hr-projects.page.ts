@@ -134,15 +134,15 @@ type PagedResponse<T> = {
       }
 
       .block {
-        border:1px solid #d6ddf5;
+        border:1px solid var(--tt-border);
         border-radius:14px;
         padding:11px;
-        background:#ffffff;
+        background:var(--tt-surface-soft);
       }
       .block + .block { margin-top:10px; }
       .block-title {
         margin:0 0 8px;
-        color:#2b2462;
+        color:var(--tt-heading);
         font-size:1rem;
       }
 
@@ -169,7 +169,7 @@ type PagedResponse<T> = {
 
       .field { display:grid; gap:6px; min-width:0; }
       .field span {
-        color:#4c4577;
+        color:var(--tt-label);
         font-size:.92rem;
         font-weight:600;
       }
@@ -178,9 +178,10 @@ type PagedResponse<T> = {
         width:100%;
         box-sizing:border-box;
         padding:8px 10px;
-        border:1px solid #bcc6eb;
+        border:1px solid var(--tt-border);
         border-radius:12px;
-        background:#fff;
+        background:var(--tt-input-bg);
+        color:var(--tt-text);
       }
 
       .projects-rail {
@@ -193,9 +194,9 @@ type PagedResponse<T> = {
         width:100%;
         text-align:left;
         padding:11px;
-        border:1px solid #bcc7ed;
+        border:1px solid var(--tt-border);
         border-radius:14px;
-        background:linear-gradient(180deg, #ffffff, #eef3ff);
+        background:linear-gradient(180deg, var(--tt-surface), var(--tt-surface-soft));
         cursor:pointer;
         box-shadow:0 8px 18px rgba(46, 33, 125, 0.08);
       }
@@ -204,13 +205,25 @@ type PagedResponse<T> = {
         background: linear-gradient(135deg, rgba(154, 140, 255, 0.28), rgba(116, 105, 221, 0.24));
         font-weight:700;
       }
-      .project-item.inactive {
-        border-color:#d8dcec;
-        background:linear-gradient(180deg, #fafbff, #eff2f9);
+      .project-item.enabled {
+        border-color: color-mix(in srgb, var(--tt-ok-border) 78%, var(--tt-border));
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--tt-ok-soft) 38%, var(--tt-surface)),
+          color-mix(in srgb, var(--tt-ok-soft) 18%, var(--tt-surface-soft))
+        );
       }
-      .project-meta { margin-top:4px; font-size:.84rem; color:#64748b; }
+      .project-item.inactive {
+        border-color: color-mix(in srgb, var(--tt-error-border) 72%, var(--tt-border));
+        background: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--tt-error-soft) 35%, var(--tt-surface)),
+          color-mix(in srgb, var(--tt-error-soft) 18%, var(--tt-surface-soft))
+        );
+      }
+      .project-meta { margin-top:4px; font-size:.84rem; color:var(--tt-muted); }
       .state-active { color:#177f46; font-weight:700; }
-      .state-inactive { color:#9d2242; font-weight:700; }
+      .state-inactive { color:var(--tt-error); font-weight:700; }
 
       .list-shell {
         margin-top:10px;
@@ -242,34 +255,34 @@ type PagedResponse<T> = {
         margin-top:10px;
         overflow-x:auto;
         overflow-y:auto;
-        border-top:1px solid #e5e9f6;
+        border-top:1px solid var(--tt-table-border);
       }
       table { width:100%; border-collapse:collapse; min-width:0; table-layout:fixed; }
       th, td {
         text-align:left;
-        border-bottom:1px solid #eee;
+        border-bottom:1px solid var(--tt-table-border);
         padding:8px;
         vertical-align:top;
         overflow-wrap:anywhere;
         word-break:break-word;
       }
-      th { color:#2f2868; font-size:.9rem; }
+      th { color:var(--tt-table-head); font-size:.9rem; }
       .table-shell td .row {
         flex-wrap: wrap !important;
       }
 
-      .muted { opacity:1; color:#544c7a; }
-      .ok { color:#0a7f20; }
-      .error { color:#b00020; }
+      .muted { opacity:1; color:var(--tt-muted); }
+      .ok { color:var(--tt-ok); }
+      .error { color:var(--tt-error); }
 
       .status-badge {
         display:inline-flex;
         align-items:center;
         padding:4px 10px;
         border-radius:999px;
-        border:1px solid #c8d1ef;
-        background:#f5f7ff;
-        color:#2f2868;
+        border:1px solid var(--tt-border);
+        background:var(--tt-surface-soft);
+        color:var(--tt-text);
         font-size:.83rem;
       }
 
@@ -300,12 +313,12 @@ type PagedResponse<T> = {
         justify-content:space-between;
         gap:8px;
         padding:8px 10px;
-        border:1px solid #d6ddf5;
+        border:1px solid var(--tt-border);
         border-radius:12px;
-        background:#fff;
+        background:var(--tt-surface-soft);
       }
       .pager-meta {
-        color:#5a527f;
+        color:var(--tt-muted);
         font-size:.86rem;
       }
       .pager-actions {
@@ -463,6 +476,7 @@ type PagedResponse<T> = {
                 type="button"
                 class="project-item"
                 [class.active]="selectedProjectId === p.id"
+                [class.enabled]="p.isActive !== false"
                 [class.inactive]="p.isActive === false"
                 (click)="selectProject(p.id)">
                 {{ p.name }}

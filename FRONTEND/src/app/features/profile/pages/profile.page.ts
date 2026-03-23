@@ -328,6 +328,7 @@ export class ProfilePage implements OnInit, OnDestroy {
         name: me.name ?? this.profile.name,
         userName: me.name ?? this.profile.userName,
         email: me.email ?? this.profile.email,
+        emailConfirmed: me.emailConfirmed ?? this.profile.emailConfirmed,
         phoneNumber: me.phoneNumber ?? this.profile.phoneNumber,
         roles: me.roles?.length ? me.roles : this.profile.roles,
         photoUrl: me.photoUrl ?? this.profile.photoUrl,
@@ -470,7 +471,7 @@ export class ProfilePage implements OnInit, OnDestroy {
       userName: displayName,
       email: currentMe?.email ?? null,
       phoneNumber: currentMe?.phoneNumber ?? null,
-      emailConfirmed: false,
+      emailConfirmed: currentMe?.emailConfirmed ?? false,
       roles,
       photoUrl: currentMe?.photoUrl ?? null,
     };

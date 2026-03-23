@@ -168,7 +168,7 @@ type MyTimeBenchmarkDto = {
         border-radius:999px;
         padding:3px 8px;
         background:#f8f9ff;
-        color:#2d2769;
+        color:var(--tt-muted, #5f5786);;
         font-size:.8rem;
       }
       .chip.project {
@@ -188,7 +188,7 @@ type MyTimeBenchmarkDto = {
         background: var(--task-bg, #fbfcff);
       }
       .task-project {
-        color:#5b5486;
+        color: var(--tt-muted, #5f5786);
         font-size:.76rem;
         margin-left:6px;
       }

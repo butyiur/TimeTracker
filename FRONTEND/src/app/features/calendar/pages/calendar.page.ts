@@ -52,17 +52,40 @@ type CalendarEntry = TimeEntryDto;
       .dow div { font-weight:600; text-align:center; padding:6px 4px; border:1px solid #eee; border-radius:8px; }
       .grid { display:grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap:6px; }
       .day { min-height:92px; border:1px solid #eee; border-radius:10px; padding:6px; background:#fafafa; cursor:pointer; display:grid; align-content:start; gap:6px; }
-      .day.off { opacity:.45; }
+      .day.off {
+        background: #edf0f7;
+        border-color: #c9d2e5;
+      }
       .day.active { border-color:#2c7be5; box-shadow: inset 0 0 0 1px #2c7be5; }
       .day.today { border-color:#86b7ff; }
       .day.locked { background:#f3f3f3; }
       .day-num { font-size:12px; font-weight:600; }
+      .day.off .day-num { color:#36426a; }
+      .day.off .chip { opacity:.86; }
+      .day.off .summary { opacity:.95; }
       .chips { display:grid; gap:4px; }
       .chip { font-size:11px; line-height:1.2; padding:3px 6px; border-radius:999px; background:#eef4ff; border:1px solid #d9e7ff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      .summary { font-size:11px; line-height:1.2; padding:3px 6px; border-radius:999px; border:1px solid #ddd; background:#f7f7f7; width:max-content; }
-      .summary.low { background:#fff4e5; border-color:#ffd9a8; }
-      .summary.ok { background:#e9f7ef; border-color:#b7ebc8; }
-      .summary.high { background:#ffe8e8; border-color:#ffc0c0; }
+      .summary {
+        font-size:11px;
+        line-height:1.2;
+        font-weight:700;
+        letter-spacing:.01em;
+        padding:3px 7px;
+        border-radius:999px;
+        border:1px solid #cfd8ea;
+        background:#f1f4fb;
+        color:#1d2740;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+        width:max-content;
+      }
+      .summary.low { background:#fff0dd; border-color:#f3bf75; color:#7a4700; }
+      .summary.ok {
+        background: #d8efe3;
+        border-color: #82bf9d;
+        color: #114a31 !important;
+        font-weight: 700;
+      }
+      .summary.high { background:#ffe3e3; border-color:#e89c9c; color:#7f2424; }
       .muted { opacity:.72; }
       .section { display:grid; gap:8px; }
       .section h3, .section h4 { margin:0; }

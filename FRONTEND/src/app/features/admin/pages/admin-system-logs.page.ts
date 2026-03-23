@@ -43,8 +43,8 @@ import { AdminAuditApiService, AuditLogDto, PagedAuditResponse } from '../data/a
       }
       .field { display:grid; gap:6px; min-width:0; }
       .field.sm { min-width:100px; }
-      .field span { font-weight:600; color:#2a245d; }
-      input, select { padding:10px 11px; border:1px solid #bcc6eb; border-radius:12px; }
+      .field span { font-weight:600; color:var(--tt-label); }
+      input, select { padding:10px 11px; border:1px solid var(--tt-border); border-radius:12px; background:var(--tt-input-bg); color:var(--tt-text); }
       .btn {
         padding:8px 13px;
         border:1px solid rgba(156, 143, 242, 0.72);
@@ -59,8 +59,8 @@ import { AdminAuditApiService, AuditLogDto, PagedAuditResponse } from '../data/a
         justify-content:center;
       }
       .btn:disabled { opacity:.6; cursor:not-allowed; }
-      .muted { opacity:1; color:#544c7a; }
-      .error { color:#b00020; }
+      .muted { opacity:1; color:var(--tt-muted); }
+      .error { color:var(--tt-error); }
       .toolbar {
         display:flex;
         align-items:center;
@@ -71,34 +71,34 @@ import { AdminAuditApiService, AuditLogDto, PagedAuditResponse } from '../data/a
       .chip {
         display:inline-flex;
         align-items:center;
-        border:1px solid #d3daf2;
+        border:1px solid var(--tt-border);
         border-radius:999px;
         padding:5px 10px;
-        color:#352d72;
+        color:var(--tt-text);
         font-size:.82rem;
         font-weight:700;
-        background:#f7f9ff;
+        background:var(--tt-surface-soft);
       }
       .quick-btn {
         min-height:34px;
         min-width:0;
         padding:6px 10px;
-        border:1px solid #d3daf2;
+        border:1px solid var(--tt-border);
         border-radius:999px;
-        color:#352d72;
+        color:var(--tt-text);
         font-size:.82rem;
         font-weight:700;
-        background:#f7f9ff;
+        background:var(--tt-surface-soft);
         cursor:pointer;
       }
       .quick-btn:hover {
-        border-color:#bfc9ef;
-        background:#eef2ff;
+        border-color:var(--tt-primary-b);
+        background:color-mix(in srgb, var(--tt-primary-a) 18%, var(--tt-surface-soft));
       }
-      .count { color:#1e1852; font-size:1.2rem; }
+      .count { color:var(--tt-heading); font-size:1.2rem; }
       table { width:100%; border-collapse:collapse; }
-      th, td { text-align:left; border-bottom:1px solid #e8ebf6; padding:10px 8px; vertical-align:top; }
-      th { color:#251f56; font-size:1.01rem; }
+      th, td { text-align:left; border-bottom:1px solid var(--tt-table-border); padding:10px 8px; vertical-align:top; }
+      th { color:var(--tt-table-head); font-size:1.01rem; }
       tbody tr:hover { background:rgba(125, 108, 229, 0.05); }
       .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; }
       .pager { display:flex; gap:8px; align-items:center; }
@@ -106,11 +106,11 @@ import { AdminAuditApiService, AuditLogDto, PagedAuditResponse } from '../data/a
       .event-chip {
         display:inline-flex;
         align-items:center;
-        border:1px solid #d6ddf3;
+        border:1px solid var(--tt-border);
         border-radius:999px;
         padding:4px 10px;
-        background:#f8f9ff;
-        color:#2d2769;
+        background:var(--tt-surface-soft);
+        color:var(--tt-text);
       }
       .result-pill {
         display:inline-flex;
@@ -123,15 +123,16 @@ import { AdminAuditApiService, AuditLogDto, PagedAuditResponse } from '../data/a
         font-size:.78rem;
         font-weight:700;
       }
-      .result-success { color:#14532d; background:#dcfce7; border-color:#bbf7d0; }
-      .result-fail { color:#991b1b; background:#fee2e2; border-color:#fecaca; }
-      .result-other { color:#334155; background:#e2e8f0; border-color:#cbd5e1; }
+      .result-success { color:var(--tt-ok); background:var(--tt-ok-soft); border-color:var(--tt-ok-border); }
+      .result-fail { color:var(--tt-error); background:var(--tt-error-soft); border-color:var(--tt-error-border); }
+      .result-other { color:var(--tt-muted); background:color-mix(in srgb, var(--tt-border) 30%, transparent); border-color:var(--tt-border); }
       .json {
         max-width:460px;
         white-space:pre-wrap;
         word-break:break-word;
-        background:#f7f8ff;
-        border:1px solid #dce2f5;
+        background:var(--tt-surface-soft);
+        border:1px solid var(--tt-border);
+        color:var(--tt-text);
         border-radius:10px;
         padding:8px;
       }

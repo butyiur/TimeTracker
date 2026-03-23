@@ -21,23 +21,20 @@ import {
   styles: [
     `
       .page {
-        min-height: 100%;
-        padding: 0;
-        position: relative;
-        isolation: isolate;
-        background:
-          radial-gradient(980px 320px at 8% -10%, rgba(102, 81, 223, 0.42), rgba(102, 81, 223, 0) 62%),
-          radial-gradient(820px 300px at 100% 112%, rgba(118, 155, 255, 0.32), rgba(118, 155, 255, 0) 62%),
-          linear-gradient(180deg, #d9d1fa 0%, #d2dcff 52%, #ced6f1 100%);
-      }
-      .page::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background:
-          linear-gradient(155deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
-      }
+  min-height: 100%;
+  padding: 0;
+  position: relative;
+  isolation: isolate;
+  background: var(--tt-app-bg);
+}
+
+.page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0));
+}
       .wrap {
         position: relative;
         z-index: 1;
@@ -56,23 +53,26 @@ import {
         box-shadow: 0 10px 24px rgba(36, 26, 92, 0.1);
       }
       .hero-kicker {
-        font-size: .74rem;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        color: #5d5684;
-        font-weight: 800;
-      }
-      .hero h1 {
-        margin: 4px 0 0;
-        font-size: clamp(1.5rem, 2.3vw, 2.15rem);
-        color: #1f1a56;
-        line-height: 1.1;
-      }
-      .hero-sub {
-        margin: 8px 0 0;
-        color: #5a527f;
-        max-width: 760px;
-      }
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--tt-muted);
+  font-weight: 800;
+}
+
+.hero h1 {
+  margin: 4px 0 0;
+  font-size: clamp(1.5rem, 2.3vw, 2.15rem);
+  color: var(--tt-heading);
+  line-height: 1.1;
+}
+
+.hero-sub {
+  margin: 8px 0 0;
+  color: var(--tt-muted);
+  max-width: 760px;
+}
+
       .card {
         border: 1px solid #c5cdee;
         border-radius: 16px;
@@ -83,10 +83,10 @@ import {
       .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
       .grid { display:grid; grid-template-columns: 190px 1fr; gap:12px 18px; }
       .label {
-        font-weight: 700;
-        color: #211a53;
-        padding-top: 6px;
-      }
+color: var(--tt-label);
+font-weight: 700;
+letter-spacing: 0.01em;
+}
       input {
         padding: 10px 12px;
         border: 1px solid #bbc6ee;
@@ -145,7 +145,7 @@ import {
         font-weight: 700;
       }
       .muted { color: #4f4675; }
-      .login-list { margin:0; padding-left:18px; display:grid; gap:6px; color: #2b245f; }
+      .login-list { margin:0; padding-left:18px; display:grid; gap:6px; color: #8d83d5; }
       .section-title { margin:0 0 10px; color: #221b50; }
       .rules { margin: 6px 0 0; padding-left:18px; display:grid; gap:4px; }
       .pass { color:#0a7f20; }
@@ -172,11 +172,11 @@ import {
       .status-badge {
         display: inline-flex;
         align-items: center;
-        border: 1px solid #cfd6ef;
+        border: 1px solid #8d83d5;
         border-radius: 999px;
         padding: 5px 10px;
         color: #3e367d;
-        background: #f8f9ff;
+        background: #8d83d5;
         font-weight: 700;
         font-size: .82rem;
       }
@@ -187,7 +187,7 @@ import {
         border: 1px solid #cfd6ef;
         border-radius: 12px;
         padding: 10px 12px;
-        background: #ffffff;
+        background: #b5aeed;
         color: #2c255f;
       }
       .theme-toggle input { min-width: 0; accent-color: #674fda; }
@@ -402,6 +402,8 @@ export class SettingsPage implements OnInit, OnDestroy {
       this.settings = {
         ...this.settings,
         userName: nextName,
+        email: me.email ?? this.settings.email,
+        emailConfirmed: me.emailConfirmed ?? this.settings.emailConfirmed,
         phoneNumber: me.phoneNumber ?? this.settings.phoneNumber,
         roles: me.roles?.length ? me.roles : this.settings.roles,
       };
@@ -702,9 +704,9 @@ export class SettingsPage implements OnInit, OnDestroy {
     return {
       userId: me?.userId ?? '-',
       userName: me?.name ?? this.auth.userName() ?? '-',
-      email: null,
-      emailConfirmed: false,
-      phoneNumber: null,
+      email: me?.email ?? null,
+      emailConfirmed: me?.emailConfirmed ?? false,
+      phoneNumber: me?.phoneNumber ?? null,
       twoFactorEnabled: false,
       twoFactorRequired: false,
       roles: this.auth.roles(),

@@ -13,7 +13,6 @@ export const authConfig: AuthConfig = {
   // ha roles-okat akarsz tokenben/claims-ben, kell az openid + profile minimum
   scope: 'openid profile api roles offline_access',
 
-  // a te verziód nem ismeri a responseMode/usePkce mezőket → ne írd bele
-  strictDiscoveryDocumentValidation: false, // most már egyezni fog, ezért lehet true
+  strictDiscoveryDocumentValidation: false,
   requireHttps: true,
 };

@@ -1,16 +1,210 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
-	--tt-text: #1f1a4b;
-	--tt-muted: #665d8a;
-	--tt-surface: #ffffff;
-	--tt-border: #cfd6ef;
-	--tt-primary-a: #9a8cff;
-	--tt-primary-b: #7469dd;
-	--tt-primary-shadow: rgba(78, 56, 184, 0.2);
-	--tt-success-a: #2fb36c;
-	--tt-success-b: #1f8a52;
-	--tt-success-shadow: rgba(25, 116, 70, 0.24);
+  --tt-text: #1f1a4b;
+  --tt-heading: #1f184e;
+  --tt-muted: #665d8a;
+  --tt-label: #4a4278;
+  --tt-link: #4f3fc1;
+  --tt-link-hover: #2f2287;
+
+  --tt-ok: #0a7f20;
+  --tt-ok-soft: rgba(10, 127, 32, 0.1);
+  --tt-ok-border: rgba(10, 127, 32, 0.28);
+
+  --tt-error: #b00020;
+  --tt-error-soft: rgba(176, 0, 32, 0.1);
+  --tt-error-border: rgba(176, 0, 32, 0.26);
+
+  --tt-warning: #7a5a12;
+  --tt-warning-soft: #fff8db;
+  --tt-warning-border: #fde68a;
+
+  --tt-hero-border: #cbd5f1;
+  --tt-hero-bg:
+    radial-gradient(520px 180px at 95% -30%, rgba(111, 92, 255, 0.16), rgba(111, 92, 255, 0) 65%),
+    linear-gradient(180deg, #ffffff, #f8f9ff);
+  --tt-hero-shadow: 0 10px 24px rgba(36, 26, 92, 0.1);
+  --tt-hero-kicker: #5d5684;
+  --tt-hero-sub: #5a527f;
+
+  --tt-kpi-bg: linear-gradient(180deg, #ffffff, #f7f8ff);
+  --tt-kpi-border: #c8d1ef;
+  --tt-kpi-label: #5a527f;
+  --tt-kpi-value: #241d57;
+
+  --tt-table-border: #e8ebf6;
+  --tt-table-head: #251f56;
+  --tt-chip-text: #2c3568;
+--tt-chip-bg: rgba(255, 255, 255, 0.72);
+--tt-chip-border: #9fb0ea;
+
+--tt-chip-accent-text: #3b3f78;
+--tt-chip-accent-bg: rgba(154, 140, 255, 0.12);
+--tt-chip-accent-border: rgba(116, 105, 221, 0.42);
+
+  --tt-app-bg:
+    radial-gradient(980px 360px at 10% -12%, rgba(112, 88, 230, 0.18), rgba(112, 88, 230, 0) 62%),
+    radial-gradient(860px 340px at 100% 116%, rgba(106, 145, 255, 0.14), rgba(106, 145, 255, 0) 64%),
+    linear-gradient(170deg, #ece9fb 0%, #e7ecfb 52%, #e1e7f5 100%);
+
+  --tt-surface: #ffffff;
+  --tt-surface-soft: #f4f7ff;
+  --tt-surface-elevated: linear-gradient(180deg, #ffffff, #f4f7ff);
+  --tt-input-bg: #ffffff;
+  --tt-border: #cfd6ef;
+
+  --tt-sidebar-bg:
+    radial-gradient(520px 210px at 0% -6%, rgba(166, 149, 250, 0.2), rgba(166, 149, 250, 0) 70%),
+    linear-gradient(170deg, rgba(37, 22, 97, 0.985), rgba(29, 17, 80, 0.985));
+  --tt-sidebar-border: rgba(205, 194, 252, 0.42);
+  --tt-sidebar-shadow: 8px 0 18px rgba(14, 9, 46, 0.28);
+  --tt-sidebar-brand-bg: rgba(255, 255, 255, 0.12);
+  --tt-sidebar-brand-border: rgba(234, 225, 255, 0.38);
+  --tt-sidebar-brand-title: #f9f6ff;
+  --tt-sidebar-brand-sub: rgba(228, 219, 255, 0.82);
+  --tt-sidebar-logo-bg: linear-gradient(135deg, #8a73ff, #5b3df5);
+  --tt-sidebar-logo-shadow: 0 8px 18px rgba(42, 25, 112, 0.36);
+  --tt-sidebar-section-label: rgba(209, 197, 255, 0.75);
+  --tt-sidebar-link: #efeaff;
+  --tt-sidebar-link-hover-bg: rgba(255, 255, 255, 0.14);
+  --tt-sidebar-link-hover-border: rgba(234, 224, 255, 0.3);
+  --tt-sidebar-link-active-bg: linear-gradient(135deg, rgba(163, 145, 252, 0.42), rgba(122, 97, 238, 0.34));
+  --tt-sidebar-link-active-border: rgba(239, 231, 255, 0.66);
+  --tt-sidebar-link-active-shadow: 0 6px 14px rgba(12, 8, 40, 0.3);
+  --tt-sidebar-dot: rgba(190, 173, 255, 0.66);
+  --tt-sidebar-dot-active: #ffffff;
+
+  --tt-topbar-bg:
+    radial-gradient(460px 130px at 14% -60%, rgba(157, 138, 251, 0.3), rgba(157, 138, 251, 0) 70%),
+    linear-gradient(145deg, rgba(56, 38, 133, 0.94), rgba(43, 29, 111, 0.92));
+  --tt-topbar-border: rgba(203, 194, 252, 0.52);
+  --tt-topbar-shadow: 0 8px 16px rgba(26, 18, 71, 0.22);
+  --tt-topbar-avatar-bg: rgba(255, 255, 255, 0.14);
+  --tt-topbar-avatar-border: rgba(238, 230, 255, 0.4);
+  --tt-topbar-avatar-color: #ffffff;
+  --tt-topbar-name: #f8f5ff;
+  --tt-topbar-role: rgba(231, 224, 255, 0.84);
+  --tt-topbar-badge-bg: rgba(255, 255, 255, 0.1);
+  --tt-topbar-badge-border: rgba(228, 220, 255, 0.44);
+  --tt-topbar-badge-color: #ffffff;
+  --tt-topbar-btn-bg: linear-gradient(135deg, rgba(130, 105, 255, 0.9), rgba(95, 72, 216, 0.88));
+  --tt-topbar-btn-hover-bg: linear-gradient(135deg, rgba(142, 117, 255, 0.95), rgba(103, 78, 228, 0.92));
+  --tt-topbar-btn-border: rgba(221, 213, 255, 0.52);
+  --tt-topbar-btn-color: #ffffff;
+
+  --tt-primary-a: #9a8cff;
+  --tt-primary-b: #7469dd;
+  --tt-primary-shadow: rgba(78, 56, 184, 0.2);
+
+  --tt-success-a: #2fb36c;
+  --tt-success-b: #1f8a52;
+  --tt-success-shadow: rgba(25, 116, 70, 0.24);
+
+  --tt-danger-a: #f16d8a;
+  --tt-danger-b: #d43e66;
+
+  --tt-shadow: 0 12px 28px rgba(28, 20, 78, 0.16);
+  --tt-focus: rgba(111, 90, 223, 0.16);
+}
+
+html.tt-dark {
+  --tt-text: #ebe8ff;
+  --tt-heading: #f5f3ff;
+  --tt-muted: #b7afd7;
+  --tt-label: #c9c2f2;
+  --tt-link: #bcb3ff;
+  --tt-link-hover: #d6d0ff;
+
+  --tt-ok: #77df8f;
+  --tt-ok-soft: rgba(35, 123, 70, 0.28);
+  --tt-ok-border: rgba(102, 205, 136, 0.45);
+
+  --tt-error: #ff9db2;
+  --tt-error-soft: rgba(128, 33, 58, 0.3);
+  --tt-error-border: rgba(227, 116, 146, 0.5);
+
+  --tt-warning: #ffd99f;
+  --tt-warning-soft: rgba(117, 84, 26, 0.3);
+  --tt-warning-border: rgba(214, 163, 79, 0.54);
+
+  --tt-hero-border: #3b4567;
+  --tt-hero-bg:
+    radial-gradient(520px 180px at 95% -30%, rgba(138, 119, 255, 0.24), rgba(138, 119, 255, 0) 68%),
+    linear-gradient(180deg, #1f2740, #1a2134);
+  --tt-hero-shadow: 0 14px 30px rgba(0, 0, 0, 0.38);
+  --tt-hero-kicker: #b7afd7;
+  --tt-hero-sub: #c8c1e6;
+
+  --tt-kpi-bg: linear-gradient(180deg, #202942, #1a2237);
+  --tt-kpi-border: #3a4568;
+  --tt-kpi-label: #beb7dd;
+  --tt-kpi-value: #f1eeff;
+
+  --tt-table-border: #33405f;
+  --tt-table-head: #e6e2ff;
+
+  --tt-chip-text: #e7e3ff;
+--tt-chip-bg: rgba(255, 255, 255, 0.04);
+--tt-chip-border: #44527d;
+
+--tt-chip-accent-text: #d9d1ff;
+--tt-chip-accent-bg: rgba(154, 140, 255, 0.14);
+--tt-chip-accent-border: rgba(154, 140, 255, 0.38);
+
+  --tt-app-bg:
+    radial-gradient(980px 360px at 10% -12%, rgba(112, 88, 230, 0.22), rgba(112, 88, 230, 0) 62%),
+    radial-gradient(860px 340px at 100% 116%, rgba(106, 145, 255, 0.14), rgba(106, 145, 255, 0) 64%),
+    linear-gradient(170deg, #121524 0%, #151a2b 48%, #10131f 100%);
+
+  --tt-surface: #1b2133;
+  --tt-surface-soft: #222a40;
+  --tt-surface-elevated: linear-gradient(180deg, #1d2438, #1a2031);
+  --tt-input-bg: #141a29;
+  --tt-border: #36405f;
+
+  --tt-sidebar-bg:
+    radial-gradient(520px 210px at 0% -6%, rgba(146, 126, 255, 0.2), rgba(146, 126, 255, 0) 72%),
+    radial-gradient(460px 210px at 100% 112%, rgba(68, 118, 255, 0.12), rgba(68, 118, 255, 0) 70%),
+    linear-gradient(170deg, rgba(20, 16, 44, 0.985), rgba(14, 12, 34, 0.985));
+  --tt-sidebar-border: rgba(110, 125, 186, 0.48);
+  --tt-sidebar-shadow: 10px 0 24px rgba(3, 4, 14, 0.42);
+  --tt-sidebar-brand-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(152, 134, 255, 0.12));
+  --tt-sidebar-brand-border: rgba(145, 129, 233, 0.5);
+  --tt-sidebar-brand-title: #f7f5ff;
+  --tt-sidebar-brand-sub: rgba(208, 199, 246, 0.9);
+  --tt-sidebar-logo-bg: linear-gradient(135deg, #8f77ff, #3f67de);
+  --tt-sidebar-logo-shadow: 0 10px 20px rgba(31, 49, 125, 0.45);
+  --tt-sidebar-section-label: rgba(186, 178, 228, 0.84);
+  --tt-sidebar-link: #ece9ff;
+  --tt-sidebar-link-hover-bg: rgba(255, 255, 255, 0.07);
+  --tt-sidebar-link-hover-border: rgba(134, 147, 214, 0.44);
+  --tt-sidebar-link-active-bg: linear-gradient(135deg, rgba(138, 119, 255, 0.42), rgba(70, 112, 223, 0.34));
+  --tt-sidebar-link-active-border: rgba(173, 186, 255, 0.62);
+  --tt-sidebar-link-active-shadow: 0 8px 16px rgba(9, 15, 44, 0.44);
+  --tt-sidebar-dot: rgba(157, 171, 236, 0.7);
+  --tt-sidebar-dot-active: #ffffff;
+
+  --tt-topbar-bg:
+    radial-gradient(460px 130px at 14% -60%, rgba(149, 128, 255, 0.24), rgba(149, 128, 255, 0) 70%),
+    linear-gradient(145deg, rgba(25, 24, 52, 0.96), rgba(20, 18, 42, 0.95));
+  --tt-topbar-border: rgba(124, 138, 205, 0.54);
+  --tt-topbar-shadow: 0 10px 20px rgba(2, 4, 14, 0.34);
+  --tt-topbar-avatar-bg: linear-gradient(135deg, rgba(139, 120, 255, 0.34), rgba(67, 102, 214, 0.28));
+  --tt-topbar-avatar-border: rgba(151, 167, 232, 0.58);
+  --tt-topbar-avatar-color: #f8f6ff;
+  --tt-topbar-name: #f7f4ff;
+  --tt-topbar-role: rgba(196, 190, 232, 0.9);
+  --tt-topbar-badge-bg: rgba(116, 137, 209, 0.2);
+  --tt-topbar-badge-border: rgba(146, 164, 226, 0.54);
+  --tt-topbar-badge-color: #ece8ff;
+  --tt-topbar-btn-bg: linear-gradient(135deg, rgba(141, 123, 255, 0.94), rgba(72, 109, 224, 0.9));
+  --tt-topbar-btn-hover-bg: linear-gradient(135deg, rgba(157, 140, 255, 0.96), rgba(86, 123, 236, 0.92));
+  --tt-topbar-btn-border: rgba(158, 175, 238, 0.62);
+  --tt-topbar-btn-color: #ffffff;
+
+  --tt-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
+  --tt-focus: rgba(138, 122, 255, 0.22);
 }
 
 html,
@@ -30,12 +224,16 @@ html {
 }
 
 body {
-	font-family: Manrope, Segoe UI, sans-serif;
-	font-size: 1rem;
-	line-height: 1.45;
-	letter-spacing: 0.01em;
-	background: #f2f2f8;
-	color: var(--tt-text);
+  font-family: Manrope, Segoe UI, sans-serif;
+  font-size: 1rem;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  background: var(--tt-app-bg);
+  color: var(--tt-text);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--tt-heading);
 }
 
 h1,
@@ -103,6 +301,13 @@ button.btn.secondary {
 	box-shadow: none;
 }
 
+html.tt-dark a.btn.secondary,
+html.tt-dark .btn.secondary,
+html.tt-dark button.btn.secondary {
+  background: var(--tt-input-bg);
+  color: var(--tt-text);
+}
+
 .btn.btn-danger,
 button.btn.btn-danger,
 a.btn.btn-danger {
@@ -141,44 +346,194 @@ input[type='file']::file-selector-button {
 	cursor: pointer;
 }
 
+a {
+  color: var(--tt-link);
+}
+
+a:hover {
+  color: var(--tt-link-hover);
+}
+
 /* Shell-wide contrast tuning for internal pages (calendar, settings, reports, etc.) */
 tt-app-shell .content .wrap {
-	max-width: none !important;
-	width: 100% !important;
+  max-width: none !important;
+  width: 100% !important;
 }
 
 tt-app-shell .content .card {
-	background: linear-gradient(180deg, #ffffff, #f4f7ff) !important;
-	border: 1px solid #c4cdec !important;
-	box-shadow: 0 12px 28px rgba(28, 20, 78, 0.16) !important;
+  background: var(--tt-surface-elevated) !important;
+  border: 1px solid var(--tt-border) !important;
+  box-shadow: var(--tt-shadow) !important;
+  color: var(--tt-text) !important;
+}
+
+tt-app-shell .content .hero {
+  border: 1px solid var(--tt-hero-border) !important;
+  border-radius: 16px;
+  background: var(--tt-hero-bg) !important;
+  box-shadow: var(--tt-hero-shadow) !important;
+}
+
+tt-app-shell .content .hero h1 {
+  margin: 4px 0 0;
+  font-size: clamp(1.5rem, 2.3vw, 2.15rem) !important;
+  line-height: 1.1;
+  color: var(--tt-heading) !important;
+}
+
+tt-app-shell .content .hero-kicker {
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 800;
+  color: var(--tt-hero-kicker) !important;
+}
+
+tt-app-shell .content .hero-sub,
+tt-app-shell .content .hero p {
+  color: var(--tt-hero-sub) !important;
+}
+
+tt-app-shell .content .kpi,
+tt-app-shell .content .mini-card {
+  background: var(--tt-kpi-bg) !important;
+  border: 1px solid var(--tt-kpi-border) !important;
+}
+
+tt-app-shell .content .kpi-label {
+  color: var(--tt-kpi-label) !important;
+}
+
+tt-app-shell .content .kpi-value {
+  color: var(--tt-kpi-value) !important;
+}
+
+tt-app-shell .content .audit-card {
+  background: var(--tt-surface-elevated) !important;
+}
+
+tt-app-shell .content th,
+tt-app-shell .content td {
+  border-bottom: 1px solid var(--tt-table-border) !important;
+}
+
+tt-app-shell .content th {
+  color: var(--tt-table-head) !important;
+}
+
+tt-app-shell .content .status-chip,
+tt-app-shell .content .event-chip {
+  border: 1px solid var(--tt-border) !important;
+  background: var(--tt-surface-soft) !important;
+  color: var(--tt-text) !important;
+}
+
+tt-app-shell .content .status-badge {
+  border: 1px solid var(--tt-border) !important;
+  background: var(--tt-surface-soft) !important;
+  color: var(--tt-text) !important;
+}
+
+tt-app-shell .content .status-success {
+  color: var(--tt-ok) !important;
+  background: var(--tt-ok-soft) !important;
+  border-color: var(--tt-ok-border) !important;
+}
+
+tt-app-shell .content .status-fail {
+  color: var(--tt-error) !important;
+  background: var(--tt-error-soft) !important;
+  border-color: var(--tt-error-border) !important;
+}
+
+tt-app-shell .content .status-other {
+  color: var(--tt-muted) !important;
+  background: color-mix(in srgb, var(--tt-border) 35%, transparent) !important;
+  border-color: var(--tt-border) !important;
+}
+
+tt-app-shell .content .status-chip.warn {
+  color: var(--tt-warning) !important;
+  border-color: var(--tt-warning-border) !important;
+  background: var(--tt-warning-soft) !important;
+}
+
+tt-app-shell .content .status-track,
+tt-app-shell .content .meter {
+  background: color-mix(in srgb, var(--tt-border) 65%, transparent) !important;
+}
+
+tt-app-shell .content .section-title,
+tt-app-shell .content .label {
+  color: var(--tt-label) !important;
+}
+
+tt-app-shell .content .ok,
+tt-app-shell .content .pass {
+  color: var(--tt-ok) !important;
+}
+
+tt-app-shell .content .error {
+  color: var(--tt-error) !important;
+}
+
+tt-app-shell .content .ok:not(.status-chip),
+tt-app-shell .content .error:not(.status-chip) {
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+tt-app-shell .content .ok:not(.status-chip) {
+  border: 1px solid var(--tt-ok-border) !important;
+  background: var(--tt-ok-soft) !important;
+}
+
+tt-app-shell .content .error:not(.status-chip) {
+  border: 1px solid var(--tt-error-border) !important;
+  background: var(--tt-error-soft) !important;
+}
+
+tt-app-shell .content .fail {
+  color: var(--tt-muted) !important;
+}
+
+tt-app-shell .content .theme-toggle {
+  border: 1px solid var(--tt-border) !important;
+  background: var(--tt-surface-soft) !important;
+  color: var(--tt-text) !important;
 }
 
 tt-app-shell .content h1,
 tt-app-shell .content h2,
 tt-app-shell .content h3,
 tt-app-shell .content h4 {
-	color: #1f184e !important;
+  color: var(--tt-heading) !important;
 }
 
 tt-app-shell .content .muted {
-	opacity: 1 !important;
-	color: #524a78 !important;
+  opacity: 1 !important;
+  color: var(--tt-muted) !important;
 }
 
 tt-app-shell .content input,
 tt-app-shell .content select,
 tt-app-shell .content textarea {
-	background: #ffffff !important;
-	color: #231d52 !important;
-	border-color: #b7c3ea !important;
+  background: var(--tt-input-bg) !important;
+  color: var(--tt-text) !important;
+  border-color: var(--tt-border) !important;
+}
+
+tt-app-shell .content input::placeholder,
+tt-app-shell .content textarea::placeholder {
+  color: var(--tt-muted) !important;
 }
 
 tt-app-shell .content input:focus,
 tt-app-shell .content select:focus,
 tt-app-shell .content textarea:focus {
-	outline: none;
-	border-color: #6f5adf !important;
-	box-shadow: 0 0 0 3px rgba(111, 90, 223, 0.16);
+  outline: none;
+  border-color: var(--tt-primary-b) !important;
+  box-shadow: 0 0 0 3px var(--tt-focus);
 }
 
 /* Force consistent action buttons in Admin/HR pages where local styles may conflict */
@@ -214,18 +569,23 @@ tt-app-shell .content a.btn:disabled {
 	box-shadow: none !important;
 }
 
-html.tt-dark body {
-	background: #121212;
-	color: #e8e8e8;
+
+
+html.tt-dark .hero {
+  border: 1px solid var(--tt-hero-border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  background: var(--tt-hero-bg);
+  box-shadow: var(--tt-hero-shadow);
 }
 
-html.tt-dark .card {
-	background: #1c1c1c !important;
-	border-color: #2f2f2f !important;
+html.tt-dark .hero-kicker,
+html.tt-dark .hero-sub {
+  color: var(--tt-hero-sub) !important;
 }
 
-html.tt-dark input,
-html.tt-dark button,
-html.tt-dark a {
-	color: #e8e8e8;
+html.tt-dark .hero h1 {
+  color: var(--tt-heading) !important;
 }
+
+

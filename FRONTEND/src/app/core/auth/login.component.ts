@@ -36,9 +36,7 @@ import { OAuthService } from 'angular-oauth2-oidc';
         display: grid;
         align-content: space-between;
         color: #f9f8ff;
-        background:
-          linear-gradient(165deg, rgba(28, 14, 70, 0.68), rgba(53, 20, 118, 0.54)),
-          url('/auth/blob-bg.svg');
+        background: linear-gradient(165deg, #25134f, #1a1648);
         background-size: cover;
         background-position: center;
       }
@@ -47,11 +45,20 @@ import { OAuthService } from 'angular-oauth2-oidc';
         position: absolute;
         inset: 0;
         background:
-          linear-gradient(170deg, rgba(20, 10, 57, 0.34), rgba(20, 10, 57, 0.7));
-        backdrop-filter: blur(1.8px);
+          linear-gradient(170deg, rgba(20, 10, 57, 0.18), rgba(20, 10, 57, 0.46));
         pointer-events: none;
+        z-index: 1;
       }
-      .hero > * { position: relative; z-index: 1; }
+      .hero::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: url('/auth/blob-bg.svg') center / cover no-repeat;
+        opacity: .72;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .hero > * { position: relative; z-index: 2; }
       .brand { font-size: 1.45rem; font-weight: 800; letter-spacing: .08em; }
       .hero-text { font-size: 2rem; line-height: 1.1; max-width: 360px; margin: 0; }
       .hero-sub { opacity: .9; max-width: 340px; }

@@ -78,7 +78,7 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
         align-items:center;
         gap:6px;
         font-weight:600;
-        color:#2c2465;
+        color:var(--tt-text);
       }
       .status-checkboxes input[type='checkbox'] {
         width:18px;
@@ -88,7 +88,7 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
         border:1px solid #bcc6eb;
         accent-color:#6f5cff;
       }
-      input, select { padding:8px 10px; border:1px solid #bcc6eb; border-radius:12px; }
+      input, select { padding:8px 10px; border:1px solid var(--tt-border); border-radius:12px; background:var(--tt-input-bg); color:var(--tt-text); }
       .btn {
         padding:8px 13px;
         border:1px solid rgba(156, 143, 242, 0.72);
@@ -105,16 +105,16 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
       .btn:disabled { opacity:.6; cursor:not-allowed; }
       .btn-success { border-color: rgba(31, 138, 82, 0.72); background: linear-gradient(135deg, #2fb36c, #1f8a52); }
       .btn-danger { border-color:#dba5a5; background:linear-gradient(135deg, #f06d8b, #d33d66); }
-      .muted { opacity:1; color:#544c7a; }
-      .error { color:#b00020; }
-      .ok { color:#0b6b2f; }
+      .muted { opacity:1; color:var(--tt-muted); }
+      .error { color:var(--tt-error); }
+      .ok { color:var(--tt-ok); }
       .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; }
       table { width:100%; border-collapse:collapse; }
       th, td { text-align:left; border-bottom:1px solid #eee; padding:8px; vertical-align:top; }
       .roles { display:flex; gap:10px; flex-wrap:wrap; }
       .status {
         display:inline-block;
-        border:1px solid #ddd;
+        border:1px solid var(--tt-border);
         border-radius:999px;
         padding:2px 8px;
         font-size:12px;
@@ -130,13 +130,13 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
         border-color:#fca5a5;
         background:#fee2e2;
       }
-      .link-btn { border:0; background:none; color:#0b4fb3; cursor:pointer; padding:0; text-decoration:underline; font:inherit; }
+      .link-btn { border:0; background:none; color:var(--tt-link); cursor:pointer; padding:0; text-decoration:underline; font:inherit; }
       .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; z-index:1500; }
       .modal {
         width:min(760px, 92vw);
-        border:1px solid #c4cdec;
+        border:1px solid var(--tt-border);
         border-radius:18px;
-        background:linear-gradient(180deg, #ffffff, #f4f7ff);
+        background:var(--tt-surface-elevated);
         padding:16px;
         display:grid;
         gap:12px;
@@ -164,13 +164,13 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
         justify-content: space-between;
         gap: 8px;
         flex-wrap: wrap;
-        border: 1px solid #d7def4;
+        border: 1px solid var(--tt-border);
         border-radius: 12px;
         padding: 8px 10px;
-        background: #fff;
+        background: var(--tt-surface-soft);
       }
       .pager-meta {
-        color: #4f4675;
+        color: var(--tt-muted);
         font-size: .88rem;
       }
       .pager-actions {
@@ -190,7 +190,7 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
         gap: 8px;
       }
       .pager-select span {
-        color: #241d57;
+        color: var(--tt-text);
         font-weight: 600;
         white-space: nowrap;
       }
@@ -341,12 +341,13 @@ import { AdminUserDetailsDto, AdminUserDto, AdminUsersApiService } from '../data
                     {{ user.roles.includes('HR') ? 'HR jog elvétele' : 'HR jog adása' }}
                   </button>
 
-                  <button class="btn btn-danger" *ngIf="canManageEmploymentStatus" (click)="setEmploymentActive(user, false)" [disabled]="isRowBusy(user.userId) || !user.isActive || !canToggleEmployment(user)">
-                    Inaktiválás
-                  </button>
-
-                  <button class="btn btn-success" *ngIf="canManageEmploymentStatus" (click)="setEmploymentActive(user, true)" [disabled]="isRowBusy(user.userId) || user.isActive || !canToggleEmployment(user)">
-                    Aktiválás
+                  <button
+                    class="btn"
+                    *ngIf="canToggleEmployment(user)"
+                    [ngClass]="user.isActive ? 'btn-danger' : 'btn-success'"
+                    (click)="toggleEmployment(user)"
+                    [disabled]="isRowBusy(user.userId)">
+                    {{ user.isActive ? 'Inaktiválás' : 'Aktiválás' }}
                   </button>
                 </div>
               </td>
@@ -479,7 +480,7 @@ export class AdminUsersPage {
 
   get canManageEmploymentStatus(): boolean {
     const roles = this.auth.effectiveRoles();
-    return roles.includes('HR') && !roles.includes('Admin');
+    return roles.includes('HR') || roles.includes('Admin');
   }
 
   async ngOnInit(): Promise<void> {
@@ -652,6 +653,10 @@ export class AdminUsersPage {
       this.rowBusyByUserId[user.userId] = false;
       this.cdr.detectChanges();
     }
+  }
+
+  toggleEmployment(user: AdminUserDto): void {
+    void this.setEmploymentActive(user, !user.isActive);
   }
 
   async toggleHrRole(user: AdminUserDto): Promise<void> {

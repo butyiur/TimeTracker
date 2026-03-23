@@ -13,20 +13,22 @@ import { APP_NAV, AppNavSection } from './app-nav';
     `
       :host {
         display:block;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        min-height: 100%;
         height: auto;
         min-height: 100%;
-        background:
-          radial-gradient(520px 210px at 0% -6%, rgba(166, 149, 250, 0.2), rgba(166, 149, 250, 0) 70%),
-          linear-gradient(170deg, rgba(37, 22, 97, 0.985), rgba(29, 17, 80, 0.985));
+        background: var(--tt-sidebar-bg);
         background-size: cover;
         background-position: center;
-        border-right: 1px solid rgba(221, 212, 255, 0.4);
+        border-right: 1px solid var(--tt-sidebar-border, rgba(221, 212, 255, 0.4));
         border-top-right-radius: 18px;
         border-bottom-right-radius: 18px;
         overflow-x: hidden;
         overflow-y: auto;
         overscroll-behavior: contain;
-        box-shadow: 8px 0 18px rgba(14, 9, 46, 0.28);
+        box-shadow: var(--tt-sidebar-shadow, 8px 0 18px rgba(14, 9, 46, 0.28));
       }
       .wrap {
         padding:14px;
@@ -43,24 +45,34 @@ import { APP_NAV, AppNavSection } from './app-nav';
         gap:10px;
         padding:10px;
         border-radius:12px;
-        background: rgba(255,255,255,0.1);
-        border:1px solid rgba(234,225,255,0.38);
+        background: var(--tt-sidebar-brand-bg, rgba(255,255,255,0.1));
+        border:1px solid var(--tt-sidebar-brand-border, rgba(234,225,255,0.38));
       }
       .logo {
-        width:34px;
-        height:34px;
+        width:38px;
+        height:38px;
         border-radius:12px;
-        background: linear-gradient(135deg, #8a73ff, #5b3df5);
-        box-shadow: 0 8px 18px rgba(42, 25, 112, 0.36);
+        display:block;
+        flex-shrink:0;
       }
-      .brandTitle { font-weight:800; line-height:1.1; color: #fff; font-size: 1.04rem; }
-      .brandSub { font-size:12px; color: rgba(228, 219, 255, 0.82); }
+      .logo-image {
+        object-fit: cover;
+        background: #100f2d;
+        border: 1px solid rgba(215, 206, 255, 0.44);
+        box-shadow: 0 8px 20px rgba(17, 11, 55, 0.44);
+      }
+      .logo-fallback {
+        background: var(--tt-sidebar-logo-bg, linear-gradient(135deg, #8a73ff, #5b3df5));
+        box-shadow: var(--tt-sidebar-logo-shadow, 0 8px 18px rgba(42, 25, 112, 0.36));
+      }
+      .brandTitle { font-weight:800; line-height:1.1; color: var(--tt-sidebar-brand-title, #fff); font-size: 1.04rem; }
+      .brandSub { font-size:12px; color: var(--tt-sidebar-brand-sub, rgba(228, 219, 255, 0.82)); }
 
       .sectionLabel {
         font-size:11px;
         letter-spacing:.11em;
         text-transform:uppercase;
-        color: rgba(209, 197, 255, 0.75);
+        color: var(--tt-sidebar-section-label, rgba(209, 197, 255, 0.75));
         padding:0 6px;
         margin-top:6px;
       }
@@ -73,19 +85,19 @@ import { APP_NAV, AppNavSection } from './app-nav';
         padding:8px 10px;
         border-radius:10px;
         text-decoration:none;
-        color:#efeaff;
+        color: var(--tt-sidebar-link, #efeaff);
         border: 1px solid transparent;
         transition: background .16s ease, border-color .16s ease, transform .16s ease, box-shadow .16s ease;
       }
       a:hover {
-        background: rgba(255,255,255,0.16);
-        border-color: rgba(234,224,255,0.32);
+        background: var(--tt-sidebar-link-hover-bg, rgba(255,255,255,0.16));
+        border-color: var(--tt-sidebar-link-hover-border, rgba(234,224,255,0.32));
         transform: translateX(2px);
       }
       a.active {
-        background: linear-gradient(135deg, rgba(163, 145, 252, 0.4), rgba(122, 97, 238, 0.36));
-        border:1px solid rgba(239,231,255,0.66);
-        box-shadow:0 6px 14px rgba(12, 8, 40, 0.3);
+        background: var(--tt-sidebar-link-active-bg, linear-gradient(135deg, rgba(163, 145, 252, 0.4), rgba(122, 97, 238, 0.36)));
+        border:1px solid var(--tt-sidebar-link-active-border, rgba(239,231,255,0.66));
+        box-shadow: var(--tt-sidebar-link-active-shadow, 0 6px 14px rgba(12, 8, 40, 0.3));
         font-weight:700;
       }
 
@@ -93,9 +105,9 @@ import { APP_NAV, AppNavSection } from './app-nav';
         width:8px;
         height:8px;
         border-radius:999px;
-        background: rgba(190, 173, 255, 0.66);
+        background: var(--tt-sidebar-dot, rgba(190, 173, 255, 0.66));
       }
-      a.active .dot { background:#ffffff; }
+      a.active .dot { background: var(--tt-sidebar-dot-active, #ffffff); }
 
       a.disabled {
         opacity: 0.45;
@@ -122,7 +134,14 @@ import { APP_NAV, AppNavSection } from './app-nav';
   template: `
     <div class="wrap">
       <div class="brand">
-        <div class="logo"></div>
+        <img
+          *ngIf="showLogo"
+          class="logo logo-image"
+          [src]="logoUrl"
+          alt="TimeTracker logó"
+          (error)="onLogoError()"
+        />
+        <div *ngIf="!showLogo" class="logo logo-fallback" aria-hidden="true"></div>
         <div>
           <div class="brandTitle">TimeTracker</div>
           <div class="brandSub">Munkaidő nyilvántartó</div>
@@ -154,6 +173,9 @@ export class SidebarComponent {
   private auth = inject(AuthStateService);
   private router = inject(Router);
   private currentUrl = this.normalizeUrl(this.router.url);
+  logoUrl = '/branding/timetracker-logo.png';
+  showLogo = true;
+  private fallbackTried = false;
 
   constructor() {
     this.router.events
@@ -163,7 +185,6 @@ export class SidebarComponent {
       });
   }
 
-  // ✅ reaktív: amikor a me$ frissül (login/refresh), újraszámoljuk a menüt
   sections$ = this.auth.me$.pipe(
     startWith(null),
     map(() => this.buildVisibleSections())
@@ -203,6 +224,16 @@ export class SidebarComponent {
     );
 
     return !hasMoreSpecificMatch;
+  }
+
+  onLogoError(): void {
+    if (!this.fallbackTried) {
+      this.logoUrl = '/branding/timetracker-logo.svg';
+      this.fallbackTried = true;
+      return;
+    }
+
+    this.showLogo = false;
   }
 
   private normalizeUrl(url: string): string {

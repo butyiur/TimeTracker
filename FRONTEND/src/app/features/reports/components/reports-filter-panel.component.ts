@@ -27,11 +27,11 @@ export type EmployeeReportFilters = {
   styles: [
     `
       .card {
-        border:1px solid #c4cdec;
+        border:1px solid var(--tt-border);
         border-radius:18px;
         padding:16px;
-        background:#ffffff;
-        box-shadow:0 12px 28px rgba(30, 21, 84, 0.14);
+        background:var(--tt-surface-elevated);
+        box-shadow:var(--tt-shadow);
       }
       .top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
       .muted { opacity:.75; }
@@ -39,10 +39,10 @@ export type EmployeeReportFilters = {
       .tabs { display:flex; gap:8px; flex-wrap:wrap; }
       .tab {
         padding:8px 13px;
-        border:1px solid #ccd4f1;
+        border:1px solid var(--tt-border);
         border-radius:999px;
-        background:linear-gradient(180deg, #ffffff, #f8f9ff);
-        color:#2a245c;
+        background:linear-gradient(180deg, var(--tt-surface), var(--tt-surface-soft));
+        color:var(--tt-text);
         cursor:pointer;
         font-weight:700;
       }
@@ -53,7 +53,8 @@ export type EmployeeReportFilters = {
       }
       .row { display:flex; gap:10px; align-items:end; flex-wrap:wrap; }
       .field { display:grid; gap:6px; min-width:220px; }
-      input { padding:8px 10px; border:1px solid #bcc6eb; border-radius:12px; }
+      .field span { color: var(--tt-label); }
+      input { padding:8px 10px; border:1px solid var(--tt-border); border-radius:12px; background: var(--tt-input-bg); color: var(--tt-text); }
       .btn {
         min-height:34px;
         min-width:112px;
@@ -86,10 +87,10 @@ export type EmployeeReportFilters = {
         border-radius:9px;
       }
       .run-stack {
-        border:1px solid #d3daf2;
+        border:1px solid var(--tt-border);
         border-radius:14px;
         padding:10px;
-        background:#ffffff;
+        background:var(--tt-surface-soft);
         display:flex;
         gap:8px;
         flex-wrap:wrap;
@@ -102,10 +103,10 @@ export type EmployeeReportFilters = {
         border-radius:9px;
       }
       .export-stack {
-        border:1px solid #d3daf2;
+        border:1px solid var(--tt-border);
         border-radius:14px;
         padding:10px;
-        background:#ffffff;
+        background:var(--tt-surface-soft);
         display:flex;
         gap:8px;
         flex-wrap:wrap;
@@ -122,7 +123,7 @@ export type EmployeeReportFilters = {
           grid-template-columns: 1fr;
         }
       }
-      .error { color:#b00020; }
+      .error { color:var(--tt-error); }
     `,
   ],
   template: `

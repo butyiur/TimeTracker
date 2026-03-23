@@ -9,6 +9,11 @@ import { OAuthService, OAuthStorage, provideOAuthClient } from 'angular-oauth2-o
 import { routes } from './app.routes';
 import { authInterceptor } from './core/http/auth.interceptor';
 import { initOAuthFactory } from './core/auth/oauth.init';
+import { SettingsApiService } from './features/settings/data/settings-api.service';
+
+function initThemeFactory(settingsApi: SettingsApiService): () => void {
+  return () => settingsApi.applySavedTheme();
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,6 +26,12 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: initOAuthFactory,
       deps: [OAuthService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initThemeFactory,
+      deps: [SettingsApiService],
       multi: true,
     },
   ],
