@@ -142,7 +142,7 @@ public class HrController : ControllerBase
     }
 
     [HttpPut("users/{userId}/employment-active")]
-    [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme, Policy = Policies.HrOnly)]
+    [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme, Policy = Policies.HrOrAdmin)]
     public async Task<IActionResult> SetEmploymentActive([FromRoute] string userId, [FromBody] HrSetEmploymentActiveRequest request)
     {
         var actorId = User.GetUserIdOrThrow();

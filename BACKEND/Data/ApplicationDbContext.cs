@@ -19,8 +19,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Approval> Approvals => Set<Approval>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
-
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -33,7 +31,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             b.Property(x => x.RegistrationApproved).HasDefaultValue(true);
         });
 
-        // Ownership mappings (maradhat, csak lent m�dos�tjuk a user t�pust!)
         // Project
         builder.Entity<Project>(b =>
         {
@@ -47,16 +44,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-           builder.Entity<ProjectTask>(b =>
-           {
-              b.Property(x => x.Name).HasMaxLength(256).IsRequired();
-              b.HasIndex(x => new { x.ProjectId, x.Name }).IsUnique(false);
+        builder.Entity<ProjectTask>(b =>
+        {
+            b.Property(x => x.Name).HasMaxLength(256).IsRequired();
+            b.HasIndex(x => new { x.ProjectId, x.Name }).IsUnique(false);
 
-              b.HasOne(x => x.Project)
-               .WithMany(p => p.Tasks)
-               .HasForeignKey(x => x.ProjectId)
-               .OnDelete(DeleteBehavior.Cascade);
-           });
+            b.HasOne(x => x.Project)
+             .WithMany(p => p.Tasks)
+             .HasForeignKey(x => x.ProjectId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
 
         // ProjectAssignment
         builder.Entity<ProjectAssignment>(b =>

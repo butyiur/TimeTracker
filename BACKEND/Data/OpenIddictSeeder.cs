@@ -19,7 +19,6 @@ public static class OpenIddictSeeder
 
         // ===== CLIENTS =====
 
-        // Swagger kliens (dev teszt) - Authorization Code + PKCE
         await EnsureSpaClient(
             appManager,
             clientId: "timetracker-swagger",
@@ -27,7 +26,6 @@ public static class OpenIddictSeeder
             postLogoutRedirectUri: "https://localhost:7037/swagger/"
         );
 
-        // Angular kliens (hossz� t�v) - Authorization Code + PKCE
         await EnsureSpaClient(
             appManager,
             clientId: "timetracker-angular-spa",
@@ -76,8 +74,6 @@ public static class OpenIddictSeeder
             OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
             OpenIddictConstants.Permissions.ResponseTypes.Code,
 
-            // OIDC scope-ok: n�lad a verzi�ban NINCS Permissions.Scopes.OpenId stb,
-            // ez�rt prefix-szel add meg:
             OpenIddictConstants.Permissions.Prefixes.Scope + "openid",
             OpenIddictConstants.Permissions.Prefixes.Scope + "profile",
             OpenIddictConstants.Permissions.Prefixes.Scope + "email",

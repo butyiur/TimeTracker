@@ -89,6 +89,7 @@ public class AuthController : ControllerBase
             userId,
             name,
             email,
+            emailConfirmed = user.EmailConfirmed,
             phoneNumber = user.PhoneNumber,
             roles,
             photoUrl = userId is null ? null : ResolvePhotoUrl(userId)

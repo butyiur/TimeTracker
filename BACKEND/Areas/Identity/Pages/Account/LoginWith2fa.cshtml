@@ -157,10 +157,7 @@
                     <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
                 </div>
 
-                <label class="remember" for="Input_RememberMachine">
-                    <input asp-for="Input.RememberMachine" />
-                    Ezen az eszközön ne kérje újra hamarosan
-                </label>
+                <input asp-for="Input.RememberMachine" type="hidden" value="false" />
 
                 <button type="submit" class="btn-main">Belépés megerősítése</button>
             </form>

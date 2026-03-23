@@ -64,7 +64,6 @@ builder.Services.AddScoped<IPasswordValidator<ApplicationUser>, DynamicPasswordP
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
-// Audit DI (ahogy nálad volt, csak egyszer)
 builder.Services.AddScoped<TimeTracker.Api.Services.IAuditService, TimeTracker.Api.Services.AuditService>();
 builder.Services.AddScoped<TimeTracker.Api.Services.IAuditWriter, TimeTracker.Api.Services.DbAuditWriter>();
 builder.Services.AddScoped<TimeTracker.Api.Data.IAuditWriter, TimeTracker.Api.Data.AuditWriter>();
@@ -79,7 +78,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseOpenIddict();
 });
 
-// ✅ IDENTITY: CSAK EZ MARAD!
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
@@ -100,7 +98,6 @@ builder.Services
     .AddDefaultTokenProviders();
 
 // OpenIddict
-// OpenIddict
 builder.Services.AddOpenIddict()
     .AddCore(options =>
     {
@@ -116,7 +113,6 @@ builder.Services.AddOpenIddict()
         options.AllowRefreshTokenFlow();
         options.RequireProofKeyForCodeExchange();
 
-        //  ide VEDD FEL
         options.RegisterScopes("api", "profile", "email", "roles", "offline_access");
 
 
@@ -165,7 +161,6 @@ builder.Services.AddAuthorization(options =>
 // API-barát cookie redirect-ek
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    // ✅ Identity UI valódi útvonalai
     options.LoginPath = "/Identity/Account/Login";
     options.LogoutPath = "/Identity/Account/Logout";
     options.AccessDeniedPath = "/Identity/Account/AccessDenied";

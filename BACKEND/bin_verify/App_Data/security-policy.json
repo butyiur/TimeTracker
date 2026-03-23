@@ -1,0 +1,4 @@
+{
+  "sessionTimeoutMinutes": 60,
+  "maxFailedLoginAttempts": 5
+}
