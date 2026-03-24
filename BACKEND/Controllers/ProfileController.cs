@@ -61,8 +61,11 @@ public class ProfileController : ControllerBase
 
     [HttpPost("me/photo")]
     [RequestSizeLimit(MaxPhotoSizeBytes)]
-    public async Task<ActionResult<PhotoUploadResponse>> UploadPhoto([FromForm] IFormFile file)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<PhotoUploadResponse>> UploadPhoto([FromForm] PhotoUploadRequest request)
     {
+        var file = request.File;
+
         if (file is null || file.Length == 0)
             return BadRequest("No file uploaded.");
 
@@ -176,3 +179,8 @@ public record ProfileMeResponse(
 );
 
 public record PhotoUploadResponse(string PhotoUrl);
+
+public sealed class PhotoUploadRequest
+{
+    public IFormFile? File { get; set; }
+}
