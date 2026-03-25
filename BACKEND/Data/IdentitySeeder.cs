@@ -23,7 +23,6 @@ public static class IdentitySeeder
         }
 
         // Dev users
-        await EnsureUser(userManager, Roles.Employee, "employee@local", "Employee.Local.2026!Pass");
         await EnsureUser(userManager, Roles.HR, "hr@local", "Hr.Local.2026!StrongPass");
         await EnsureUser(userManager, Roles.Admin, "admin@local", "Admin.Local.2026!StrongPass");
     }
@@ -41,7 +40,10 @@ public static class IdentitySeeder
             {
                 UserName = email,
                 Email = email,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                RegistrationApproved = true,
+                EmploymentActive = true,
+                LockoutEnabled = true
             };
 
             var create = await userManager.CreateAsync(user, password);
@@ -51,6 +53,18 @@ public static class IdentitySeeder
 
             Console.WriteLine($"Seeded user: {email} | role: {role} | id: {user.Id}");
 
+        }
+        else
+        {
+            user.EmailConfirmed = true;
+            user.RegistrationApproved = true;
+            user.EmploymentActive = true;
+            user.LockoutEnabled = true;
+
+            var normalize = await userManager.UpdateAsync(user);
+            if (!normalize.Succeeded)
+                throw new InvalidOperationException($"Failed to normalize {email}: " +
+                    string.Join("; ", normalize.Errors.Select(e => e.Description)));
         }
 
         if (!await userManager.IsInRoleAsync(user, role))
